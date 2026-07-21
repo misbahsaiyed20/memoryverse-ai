@@ -89,6 +89,34 @@ memoryverse-ai/
 
 ---
 
+## Sprint 2 — Auth setup
+
+Before `npm run dev` / `uvicorn` will actually let you sign in, you need a
+Firebase project:
+
+1. Create a project at [console.firebase.google.com](https://console.firebase.google.com)
+2. **Authentication → Sign-in method → Google** → enable it
+3. **Project Settings → General → Your apps → Web app** → copy the config
+   values into `frontend/.env.local` (`NEXT_PUBLIC_FIREBASE_*`)
+4. **Project Settings → Service Accounts → Generate new private key** →
+   save the downloaded JSON as `backend/firebase-service-account.json`
+   (already gitignored)
+
+Without step 4, the backend still boots and `/health` still works — auth
+routes return a clear `503` instead of crashing, so you can develop other
+things without Firebase configured.
+
+**New backend route:** `POST /api/v1/auth/login` — verifies the Firebase
+ID token sent in `Authorization: Bearer <token>` and creates the user row
+in Postgres on first login.
+
+**New protected route:** `GET /api/v1/dashboard/stats` — requires the same
+Bearer token on every call (not just at login), returns hardcoded
+`{documents: 0, skills: 0, projects: 0, certificates: 0}` for now.
+
+**New pages:** `/` (landing), `/login` (custom Google sign-in), `/dashboard`
+(protected — redirects to `/login` if not signed in).
+
 ## Known items / notes
 
 - `npm audit` reports one moderate advisory nested inside Next.js's own

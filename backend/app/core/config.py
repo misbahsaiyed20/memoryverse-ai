@@ -14,11 +14,16 @@ class Settings(BaseSettings):
     app_name: str = "MemoryVerse AI"
     environment: str = "development"
 
-    # Database (connection config only — no models/migrations this sprint)
+    # Database
     database_url: str = "postgresql://postgres:postgres@localhost:5432/memoryverse"
 
     # CORS
     allowed_origins: str = "http://localhost:3000"
+
+    # Firebase Admin SDK — path to the service account JSON downloaded from
+    # Firebase Console. Not loaded until the first request that needs auth,
+    # so the app still boots fine without it (e.g. for /health).
+    firebase_credentials_path: str = "./firebase-service-account.json"
 
     model_config = SettingsConfigDict(
         env_file=".env",

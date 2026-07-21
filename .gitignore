@@ -1,10 +1,3 @@
-# Environment
-backend/.env
-frontend/.env.local
-
-# Firebase
-backend/firebase-service-account.json
-
 # Python
 backend/.venv/
 __pycache__/
@@ -13,6 +6,13 @@ __pycache__/
 # Node
 frontend/node_modules/
 frontend/.next/
+
+# Environment
+backend/.env
+frontend/.env.local
+
+# Firebase
+backend/firebase-service-account.json
 
 # OS
 .DS_Store
