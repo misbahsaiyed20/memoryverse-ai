@@ -12,7 +12,7 @@ Run from the `backend/` directory with:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, dashboard, health
+from app.api.v1 import auth, dashboard, documents, health
 from app.core.config import settings
 from app.db.base import init_db
 
@@ -37,3 +37,4 @@ def on_startup() -> None:
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
+app.include_router(documents.router, prefix="/api/v1")

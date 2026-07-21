@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     # so the app still boots fine without it (e.g. for /health).
     firebase_credentials_path: str = "./firebase-service-account.json"
 
+    # Local document storage — see app/services/storage/local.py
+    upload_dir: str = "./uploads"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

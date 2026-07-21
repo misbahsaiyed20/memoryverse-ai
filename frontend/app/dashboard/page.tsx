@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
 import { StatCard } from "@/components/stat-card";
+import { DocumentsSection } from "@/components/documents/documents-section";
 
 interface DashboardStats {
   documents: number;
@@ -39,11 +40,19 @@ export default function DashboardPage() {
 
     let cancelled = false;
     apiFetch("/api/v1/dashboard/stats")
-      .then((res) => res.json())
-      .then((data) => {
+      .then((res) => {
+        if (!res.ok) {
+          // Error response body (e.g. {"detail": "..."}) doesn't match
+          // DashboardStats shape — fall back to zeros instead of setting it.
+          throw new Error(`Stats request failed with ${res.status}`);
+        }
+        return res.json();
+      })
+      .then((data: DashboardStats) => {
         if (!cancelled) setStats(data);
       })
       .catch(() => {
+        if (!cancelled) setStats(EMPTY_STATS);
         // Stats failing to load isn't critical here — the dashboard still
         // renders with zeros, which is an honest state anyway this sprint.
       })
@@ -97,12 +106,7 @@ export default function DashboardPage() {
           <StatCard label="Certificates" value={statsLoading ? 0 : stats.certificates} />
         </div>
 
-        <div className="mt-10 rounded-2xl border border-dashed border-border bg-surface px-8 py-14 text-center">
-          <p className="text-muted">
-            Your Career Brain is empty. Upload your first document to begin
-            building your digital identity.
-          </p>
-        </div>
+        <DocumentsSection />
       </div>
     </main>
   );
