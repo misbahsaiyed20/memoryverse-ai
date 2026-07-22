@@ -2,9 +2,17 @@
 
 import { useEffect, useState } from "react";
 
-import { listDocuments, renameDocument, deleteDocument, type DocumentItem } from "@/lib/documents-api";
+import {
+  listDocuments,
+  renameDocument,
+  deleteDocument,
+  processDocument,
+  type DocumentItem,
+} from "@/lib/documents-api";
 import { UploadDropzone } from "@/components/documents/upload-dropzone";
 import { DocumentList } from "@/components/documents/document-list";
+
+const POLL_INTERVAL_MS = 3000;
 
 export function DocumentsSection() {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
@@ -29,6 +37,24 @@ export function DocumentsSection() {
     };
   }, []);
 
+  // While anything is PROCESSING, poll for status updates — there's no
+  // push notification from the background task, so this is how the UI
+  // finds out when it flips to PROCESSED/FAILED.
+  useEffect(() => {
+    const hasProcessing = documents.some((d) => d.status === "PROCESSING");
+    if (!hasProcessing) return;
+
+    const interval = setInterval(() => {
+      listDocuments()
+        .then(setDocuments)
+        .catch(() => {
+          // Transient poll failure — next tick retries, no need to surface it.
+        });
+    }, POLL_INTERVAL_MS);
+
+    return () => clearInterval(interval);
+  }, [documents]);
+
   function handleUploaded(doc: DocumentItem) {
     setDocuments((prev) => [doc, ...prev]);
   }
@@ -41,6 +67,11 @@ export function DocumentsSection() {
   async function handleDelete(id: string) {
     await deleteDocument(id);
     setDocuments((prev) => prev.filter((d) => d.id !== id));
+  }
+
+  async function handleProcess(id: string) {
+    const { status } = await processDocument(id);
+    setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, status, processing_error: null } : d)));
   }
 
   return (
@@ -67,7 +98,12 @@ export function DocumentsSection() {
       )}
 
       {!loading && documents.length > 0 && (
-        <DocumentList documents={documents} onRename={handleRename} onDelete={handleDelete} />
+        <DocumentList
+          documents={documents}
+          onRename={handleRename}
+          onDelete={handleDelete}
+          onProcess={handleProcess}
+        />
       )}
     </section>
   );

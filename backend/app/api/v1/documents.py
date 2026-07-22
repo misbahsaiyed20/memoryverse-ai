@@ -1,8 +1,8 @@
-"""Document management routes — upload, list, rename, delete, download."""
+"""Document management routes — upload, list, rename, delete, download, process."""
 
 import uuid
 
-from fastapi import APIRouter, Depends, File, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, UploadFile
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
@@ -10,8 +10,10 @@ from app.api.deps import get_current_user, get_storage_service
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.document import DocumentOut, DocumentRenameRequest
+from app.services.document_processing_service import DocumentProcessingService
 from app.services.document_service import DocumentService
 from app.services.storage.base import StorageService
+from app.services.task_runner import schedule_document_processing
 from app.utils.response import success_response
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -27,7 +29,7 @@ async def upload_document(
     service = DocumentService(db)
     document = await service.upload(current_user.id, file, storage)
     return success_response(
-        DocumentOut.model_validate(document).model_dump(mode="json"),
+        DocumentOut.from_document(document).model_dump(mode="json"),
         "Document uploaded successfully.",
     )
 
@@ -40,7 +42,7 @@ def list_documents(
     service = DocumentService(db)
     documents = service.list_for_user(current_user.id)
     return success_response(
-        [DocumentOut.model_validate(d).model_dump(mode="json") for d in documents],
+        [DocumentOut.from_document(d).model_dump(mode="json") for d in documents],
         "Documents retrieved successfully.",
     )
 
@@ -54,7 +56,7 @@ def get_document(
     service = DocumentService(db)
     document = service.get_owned_or_404(document_id, current_user.id)
     return success_response(
-        DocumentOut.model_validate(document).model_dump(mode="json"),
+        DocumentOut.from_document(document).model_dump(mode="json"),
         "Document retrieved successfully.",
     )
 
@@ -70,7 +72,7 @@ def rename_document(
     document = service.get_owned_or_404(document_id, current_user.id)
     updated = service.rename(document, body.title)
     return success_response(
-        DocumentOut.model_validate(updated).model_dump(mode="json"),
+        DocumentOut.from_document(updated).model_dump(mode="json"),
         "Document renamed successfully.",
     )
 
@@ -110,4 +112,23 @@ def download_document(
         iterfile(),
         media_type=document.mime_type,
         headers={"Content-Disposition": f'attachment; filename="{document.original_filename}"'},
+    )
+
+
+@router.post("/{document_id}/process")
+def process_document(
+    document_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Starts background text extraction. Returns once status flips to
+    PROCESSING — the actual extraction happens after this response is sent.
+    """
+    service = DocumentProcessingService(db)
+    document = service.mark_processing(document_id, current_user.id)
+    schedule_document_processing(background_tasks, document_id)
+    return success_response(
+        {"status": document.status.value},
+        "Document processing started.",
     )

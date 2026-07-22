@@ -117,6 +117,65 @@ Bearer token on every call (not just at login), returns hardcoded
 **New pages:** `/` (landing), `/login` (custom Google sign-in), `/dashboard`
 (protected — redirects to `/login` if not signed in).
 
+## Sprint 3 — Document uploads
+
+**New backend routes** (all require `Authorization: Bearer <token>`, all
+scoped to the authenticated user — accessing someone else's document
+returns `404`, never `403`):
+- `POST /api/v1/documents/upload` — multipart file upload
+- `GET /api/v1/documents` — list your documents
+- `GET /api/v1/documents/{id}` — get one
+- `PATCH /api/v1/documents/{id}` — rename (`{"title": "..."}`)
+- `DELETE /api/v1/documents/{id}` — delete (removes both the DB row and the file)
+- `GET /api/v1/documents/{id}/download` — stream the original file back
+
+Allowed types: `pdf, doc, docx, txt, png, jpg, jpeg`, max 25 MB. Files are
+stored under `backend/uploads/` (configurable via `UPLOAD_DIR` in `.env`),
+named by a generated UUID — never the original filename, never exposed
+to the client.
+
+**New frontend:** the dashboard's Documents section now has a real
+drag-and-drop upload area (with per-file progress), a document list with
+file-type icons, status badges, rename/delete/download actions, and the
+same empty-state message from Sprint 2 (now shown only when you actually
+have zero documents).
+
+## Sprint 4 — Document processing
+
+**⚠️ Manual step required before running:** run
+`backend/sql/sprint4_manual_migration.sql` once against your existing
+Postgres database (adds `extracted_text`, `processed_at`,
+`processing_error` to `documents`). We're keeping `create_all()` instead
+of Alembic for now, and `create_all()` never alters existing tables —
+only creates missing ones.
+
+```powershell
+psql -U postgres -d memoryverse -f backend/sql/sprint4_manual_migration.sql
+```
+
+**New backend route:** `POST /api/v1/documents/{id}/process` — starts
+text extraction as a FastAPI BackgroundTask. Returns immediately with
+`{"data": {"status": "PROCESSING"}}`; the actual extraction happens
+after the response is sent.
+
+**Status lifecycle:** `UPLOADED → PROCESSING → PROCESSED` or `FAILED`.
+`FAILED` documents can be retried (POST `/process` again); `PROCESSING`
+or `PROCESSED` documents reject a second trigger with `409`.
+
+**Supported types:** PDF (PyMuPDF), DOCX (python-docx), TXT (stdlib).
+Legacy `.doc` uploads are accepted by Sprint 3 but have no processor
+registered — triggering `/process` on one fails gracefully to `FAILED`
+with a clear `processing_error`, not a crash.
+
+**Document detail/list responses** now include `processed_at`,
+`has_extracted_text` (boolean), and `processing_error` — the raw
+extracted text itself is never returned by any Sprint 4 endpoint.
+
+**Frontend:** each `UPLOADED`/`FAILED` document gets a "Process" action
+(sparkle icon); `PROCESSING` shows a spinner; the dashboard polls every
+3s while anything is processing so status updates show up without a
+manual refresh; `FAILED` documents show their error message inline.
+
 ## Known items / notes
 
 - `npm audit` reports one moderate advisory nested inside Next.js's own

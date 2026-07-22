@@ -22,6 +22,9 @@ export interface DocumentItem {
   status: "UPLOADED" | "PROCESSING" | "PROCESSED" | "FAILED" | "ARCHIVED";
   created_at: string;
   updated_at: string;
+  processed_at: string | null;
+  has_extracted_text: boolean;
+  processing_error: string | null;
 }
 
 interface ApiEnvelope<T> {
@@ -59,6 +62,13 @@ export async function renameDocument(id: string, title: string): Promise<Documen
 export async function deleteDocument(id: string): Promise<void> {
   const res = await apiFetch(`/api/v1/documents/${id}`, { method: "DELETE" });
   if (!res.ok) throw new Error(await extractErrorMessage(res, "Failed to delete document."));
+}
+
+export async function processDocument(id: string): Promise<{ status: DocumentItem["status"] }> {
+  const res = await apiFetch(`/api/v1/documents/${id}/process`, { method: "POST" });
+  if (!res.ok) throw new Error(await extractErrorMessage(res, "Failed to start processing."));
+  const body: ApiEnvelope<{ status: DocumentItem["status"] }> = await res.json();
+  return body.data;
 }
 
 export async function downloadDocument(id: string, filename: string): Promise<void> {
