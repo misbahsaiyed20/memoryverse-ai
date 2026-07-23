@@ -18,6 +18,6 @@ class Base(DeclarativeBase):
 def init_db() -> None:
     # Import models here (not at module top) so they're registered on
     # Base.metadata before create_all runs, without causing circular imports.
-    from app.models import document, user  # noqa: F401
+    from app.models import document, document_chunk, user  # noqa: F401
 
     Base.metadata.create_all(bind=engine)

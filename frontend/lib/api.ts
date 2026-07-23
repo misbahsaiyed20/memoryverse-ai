@@ -23,12 +23,12 @@ export async function apiFetch(
     throw new Error("apiFetch called with no authenticated user and no idToken override.");
   }
 
+  const headers = new Headers(options.headers ?? undefined);
+  headers.set("Authorization", `Bearer ${idToken}`);
+  headers.set("Content-Type", "application/json");
+
   return fetch(`${API_BASE_URL}${path}`, {
     ...options,
-    headers: {
-      ...options.headers,
-      Authorization: `Bearer ${idToken}`,
-      "Content-Type": "application/json",
-    },
+    headers,
   });
 }

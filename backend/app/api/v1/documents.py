@@ -10,10 +10,11 @@ from app.api.deps import get_current_user, get_storage_service
 from app.db.session import get_db
 from app.models.user import User
 from app.schemas.document import DocumentOut, DocumentRenameRequest
+from app.services.chunking_service import ChunkingService
 from app.services.document_processing_service import DocumentProcessingService
 from app.services.document_service import DocumentService
 from app.services.storage.base import StorageService
-from app.services.task_runner import schedule_document_processing
+from app.services.task_runner import schedule_document_chunking, schedule_document_processing
 from app.utils.response import success_response
 
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -131,4 +132,24 @@ def process_document(
     return success_response(
         {"status": document.status.value},
         "Document processing started.",
+    )
+
+
+@router.post("/{document_id}/chunk")
+def chunk_document(
+    document_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Starts background chunk generation. Chunking is independent of
+    processing — it only runs when explicitly triggered here, never
+    automatically after /process completes.
+    """
+    service = ChunkingService(db)
+    service.validate_for_chunking(document_id, current_user.id)
+    schedule_document_chunking(background_tasks, document_id)
+    return success_response(
+        {"document_id": str(document_id), "chunking_status": "started"},
+        "Chunking started.",
     )

@@ -19,7 +19,7 @@ def get_storage_service() -> StorageService:
 
 
 def get_current_user(
-    authorization: str = Header(default=""),
+    authorization: str = Header(default="", alias="Authorization"),
     db: Session = Depends(get_db),
 ) -> User:
     """Verify the Bearer token on every protected request and return the User.

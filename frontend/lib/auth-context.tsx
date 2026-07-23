@@ -41,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signInWithGoogle() {
     const result = await signInWithPopup(getFirebaseAuth(), googleProvider);
     const idToken = await result.user.getIdToken();
+console.log("FIREBASE TOKEN:", idToken);
 
     // Register/sync the user record in Postgres on first (or any) login.
     // Failures here shouldn't block the user from reaching the dashboard —
