@@ -3,6 +3,13 @@ backend/.venv/
 __pycache__/
 *.pyc
 
+
+backend/venv/
+venv/
+**/venv/
+
+
+
 # Node
 frontend/node_modules/
 frontend/.next/
@@ -13,6 +20,10 @@ frontend/.env.local
 
 # Firebase
 backend/firebase-service-account.json
+
+# Uploads
+backend/uploads/
+uploads/
 
 # OS
 .DS_Store
