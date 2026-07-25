@@ -1,19 +1,22 @@
-# Environment
-backend/.env
-frontend/.env.local
-
-# Firebase
-backend/firebase-service-account.json
-
-# Python
-backend/.venv/
 __pycache__/
-*.pyc
-
-# Node
-frontend/node_modules/
-frontend/.next/
-
-# OS
+*.py[cod]
+.venv/
+.env
+firebase-service-account.json
+uploads/*
+!uploads/.gitkeep
+chromadb/
+*.egg-info/
+.pytest_cache/
+venv/
+env/
+.env
+.env.*
+!.env.example
+build/
+dist/
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
+*.log

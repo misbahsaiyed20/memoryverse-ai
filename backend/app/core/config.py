@@ -28,6 +28,15 @@ class Settings(BaseSettings):
     # Local document storage — see app/services/storage/local.py
     upload_dir: str = "./uploads"
 
+    # Gemini extraction (Sprint 6). Model name is configurable so a
+    # future model rename/deprecation is a one-line env var change,
+    # not a code change.
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.5-flash"
+
+    # Vector storage (Sprint 7) — persistent local ChromaDB path.
+    chroma_db_path: str = "./chromadb"
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

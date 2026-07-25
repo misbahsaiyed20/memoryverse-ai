@@ -1,11 +1,3 @@
-"""
-Firebase Admin SDK initialization.
-
-Lazily initialized on first use (not at import time) so the app still
-boots and /health still works even if the service account file isn't
-configured yet — only auth-protected routes actually need it.
-"""
-
 import os
 
 import firebase_admin
@@ -17,9 +9,13 @@ _app: firebase_admin.App | None = None
 
 
 def get_firebase_app() -> firebase_admin.App:
-    """Return the initialized Firebase Admin app, initializing it on first call."""
     global _app
+
     if _app is not None:
+        return _app
+
+    if firebase_admin._apps:
+        _app = firebase_admin.get_app()
         return _app
 
     if not os.path.exists(settings.firebase_credentials_path):
@@ -32,5 +28,10 @@ def get_firebase_app() -> firebase_admin.App:
         )
 
     cred = credentials.Certificate(settings.firebase_credentials_path)
-    _app = firebase_admin.initialize_app(cred)
+
+    try:
+        _app = firebase_admin.initialize_app(cred)
+    except ValueError:
+        _app = firebase_admin.get_app()
+
     return _app
