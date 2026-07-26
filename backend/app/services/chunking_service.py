@@ -13,6 +13,15 @@ the same reason: validate_for_chunking() runs inside the request (using
 the request-scoped session) so the response can be accurate immediately;
 run()/generate_and_store() do the actual work in the background task,
 with their own session since the request-scoped one is closed by then.
+
+Sprint 7 Part 3: immediately after chunks are stored, this triggers
+EmbeddingService.embed_document() — chunking is still the only place
+that decides "when," embedding itself is untouched/unduplicated. This is
+NOT automatic chaining of chunking-after-processing (still forbidden,
+per above) — it's chunking triggering the step that logically follows
+it, same as it already triggers nothing for extraction (extraction
+stays on its own independent endpoint). Embedding failures are always
+caught and logged, never re-raised — they must never fail chunking.
 """
 
 import logging
@@ -21,10 +30,13 @@ import uuid
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_vector_store
 from app.chunking.chunk_generator import ChunkGenerator
 from app.db.session import SessionLocal
+from app.embeddings.gemini_embedding_provider import GeminiEmbeddingProvider
 from app.models.document import Document, DocumentStatus
 from app.models.document_chunk import DocumentChunk
+from app.services.embedding_service import EmbeddingService
 
 logger = logging.getLogger(__name__)
 
@@ -124,12 +136,61 @@ class ChunkingService:
                 document_id,
                 len(chunk_rows),
             )
+
+            self._trigger_embedding(document_id)
+
             return len(chunk_rows)
 
         except Exception as exc:
             self.db.rollback()
             logger.error("Chunking failed for document_id=%s: %s", document_id, exc, exc_info=True)
             raise
+
+    def _trigger_embedding(self, document_id: uuid.UUID) -> None:
+        """Generate and store embeddings for this document's chunks,
+        immediately after chunking succeeds.
+
+        Reuses EmbeddingService/GeminiEmbeddingProvider/ChromaVectorStore
+        exactly as they already exist — nothing here is duplicated or
+        reimplemented. Any failure is caught and logged as a warning;
+        it is NEVER re-raised, so a Gemini outage or embedding bug can
+        never fail chunking, which has already succeeded and committed
+        by the time this runs.
+        """
+        logger.info("Embedding started. document_id=%s", document_id)
+
+        try:
+            chunk_count = (
+                self.db.query(DocumentChunk)
+                .filter(DocumentChunk.document_id == document_id)
+                .count()
+            )
+            logger.info("Chunks found: %d. document_id=%s", chunk_count, document_id)
+
+            if chunk_count == 0:
+                logger.info("Embedding skipped: no chunks. document_id=%s", document_id)
+                return
+
+            logger.info("Generating embeddings... document_id=%s", document_id)
+
+            embedding_service = EmbeddingService(
+                db=self.db,
+                embedding_provider=GeminiEmbeddingProvider(),
+                vector_store=get_vector_store(),
+            )
+            stored_count = embedding_service.embed_document(document_id)
+
+            logger.info(
+                "Stored embeddings: %d. document_id=%s", stored_count, document_id
+            )
+            logger.info("Embedding completed successfully. document_id=%s", document_id)
+
+        except Exception as exc:
+            logger.warning(
+                "Embedding failed. document_id=%s, reason=%s. "
+                "Continuing without failing document processing.",
+                document_id, exc,
+            )
 
     def _has_existing_chunks(self, document_id: uuid.UUID, return_count: bool = False):
         count = (

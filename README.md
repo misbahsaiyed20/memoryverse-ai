@@ -176,6 +176,103 @@ extracted text itself is never returned by any Sprint 4 endpoint.
 3s while anything is processing so status updates show up without a
 manual refresh; `FAILED` documents show their error message inline.
 
+## Sprint 5 — Smart chunking engine
+
+**⚠️ Manual step required before running:** run
+`backend/sql/sprint5_manual_migration.sql` once against your Postgres
+database (creates `document_chunks`).
+
+```powershell
+psql -U postgres -d memoryverse -f backend/sql/sprint5_manual_migration.sql
+```
+
+**New backend route:** `POST /api/v1/documents/{id}/chunk` — starts
+paragraph-aware chunking as a FastAPI BackgroundTask. Requires the
+document to already be `PROCESSED` with non-empty extracted text, and
+rejects a second trigger once chunks exist (`409` either way).
+
+**Chunking is independent of processing** — it never runs
+automatically; it's only triggered by this endpoint. Target chunk size
+1000 chars (max 1200), 150-char overlap, paragraph → sentence →
+whitespace → forced-split priority. Chunk *content* is never returned
+by any API response — only metadata (offsets, character/token counts)
+is modeled, for future sprints.
+
+No frontend changes this sprint — there's no UI requirement in the
+brief, and chunk content must stay server-side only.
+
+## Sprint 6 — Career Brain knowledge extraction (Gemini)
+
+**⚠️ Two manual steps before running:**
+
+1. Get a Gemini API key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey), add to `backend/.env`:
+   ```
+   GEMINI_API_KEY=<your key>
+   GEMINI_MODEL=gemini-2.5-flash
+   ```
+2. Run `backend/sql/sprint6_manual_migration.sql` once against your Postgres database (adds `extraction_status`/`extraction_error`/`extracted_at` to `documents`). `knowledge_nodes`, `evidence_links`, and `knowledge_edges` are brand-new tables — `create_all()` creates them automatically, no manual SQL needed for those.
+
+```powershell
+psql -U postgres -d memoryverse -f backend/sql/sprint6_manual_migration.sql
+pip install -r backend/requirements.txt   # google-genai is new; pydantic bumped to 2.13.4
+```
+
+**New backend routes:**
+- `POST /api/v1/documents/{id}/extract` — starts Gemini extraction as a BackgroundTask. Requires the document to be `PROCESSED` with existing chunks (`/chunk` run first); rejects a second trigger while `EXTRACTING`/`EXTRACTED` (`409`), retryable from `FAILED`.
+- `GET /api/v1/documents/{id}/knowledge` — metadata-only view of extracted entities (`knowledge_nodes`) and relationships (`knowledge_edges`) for a document. Never returns evidence excerpts or raw Gemini output.
+
+**Hybrid extraction:** documents chunk into groups of 5 for Gemini calls — a document with ≤5 chunks becomes one call; larger documents become multiple calls. Known limitation: relationships between entities in *different* batches aren't detected, only within a batch.
+
+**Every entity is independently verified** before storage: its `evidence_quote` must actually appear in the source chunk text, or it's discarded (never trust Gemini's output blindly). Same for relationships — both endpoints must be in that batch's successfully-stored entities, or the relationship is discarded.
+
+No frontend changes this sprint (backend-only, matching Sprint 5's precedent — nothing in the brief asked for a UI).
+
+## Sprint 7 Part 1 — Vector storage infrastructure
+
+Infrastructure only — no new dependency, no routes, no callers yet.
+`ChromaDB` is now installed and a `career_brain` collection is created
+automatically at backend startup (persisted under `backend/chromadb/`,
+configurable via `CHROMA_DB_PATH` in `.env`). Nothing in the app calls
+it yet — `EmbeddingService` and `SearchService` don't exist until a
+future sprint.
+
+**New:** `app/embeddings/vector_store.py` (abstract `VectorStore`
+interface — `create_collection`, `upsert`, `query`, `delete`,
+`delete_document`, `health_check`), `app/embeddings/chroma_vector_store.py`
+(the Chroma implementation). Same interface-first pattern as
+`StorageService`/`LocalStorageService` from Sprint 3.
+
+The vector store instance lives on `app.state.vector_store` (set at
+startup), not a module-level singleton — check there if a future sprint
+needs to depend on it.
+
+## Sprint 7 Part 2 — Embedding service
+
+Still no routes, no frontend, no search/RAG/chat — service + provider
+only, matching Part 1's infrastructure-first scope.
+
+**New:** `app/embeddings/embedding_provider.py` (abstract
+`EmbeddingProvider` — `embed_text`, `embed_batch`),
+`app/embeddings/gemini_embedding_provider.py` (Gemini `text-embedding-004`
+implementation, same retry/backoff pattern as `gemini_client.py`),
+`app/services/embedding_service.py` (`EmbeddingService.embed_document()`
+— loads a document's chunks from Postgres, embeds them in batches,
+stores via the `VectorStore` from Part 1).
+
+Vector IDs are `chunk_<chunk_uuid>` (stable — re-running embed_document
+on the same document overwrites rather than duplicates). Metadata
+stored per vector: `document_id`, `chunk_id`, `filename`, `mime_type`,
+`chunk_index`. **`page` is requested but not actually available** —
+chunking (Sprint 5) has no page-boundary tracking, and ChromaDB itself
+silently drops metadata keys with a `None` value rather than storing
+them (verified directly) — so `page` won't appear on stored records
+until a future sprint adds real page tracking through the pipeline.
+
+If a whole batch's embedding call fails, `EmbeddingService` falls back
+to embedding that batch one chunk at a time, so a single bad chunk
+never costs the rest of the batch — logged, not fatal, matching the
+"continue on individual chunk failure" requirement.
+
 ## Known items / notes
 
 - `npm audit` reports one moderate advisory nested inside Next.js's own

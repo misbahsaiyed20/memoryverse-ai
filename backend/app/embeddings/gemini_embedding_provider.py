@@ -26,13 +26,16 @@ BACKOFF_SECONDS = (2, 4, 8)
 _RETRYABLE_STATUS_CODES = {429, 500, 503}
 
 # RETRIEVAL_DOCUMENT is the task type Gemini recommends for text that
-# will later be searched against (as opposed to RETRIEVAL_QUERY, used
-# when embedding a search query) — appropriate here since every chunk
-# embedded by EmbeddingService is content being indexed, not a query.
-# text-embedding-004 supports this parameter (unlike some newer Gemini
-# embedding models, where it's deprecated in favor of prompt-embedded
-# task instructions).
-_TASK_TYPE = "RETRIEVAL_DOCUMENT"
+# will later be searched against — used for everything EmbeddingService
+# indexes. RETRIEVAL_QUERY is the counterpart for the search query
+# itself (Sprint 8 Part 1) — Gemini's embedding model is asymmetric:
+# embedding a query and a document differently (even for near-identical
+# text) measurably improves retrieval quality versus using the same
+# task type for both. text-embedding-004 supports this parameter
+# (unlike some newer Gemini embedding models, where it's deprecated in
+# favor of prompt-embedded task instructions).
+_TASK_TYPE_DOCUMENT = "RETRIEVAL_DOCUMENT"
+_TASK_TYPE_QUERY = "RETRIEVAL_QUERY"
 
 
 class EmbeddingError(Exception):
@@ -52,6 +55,12 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
         return self.embed_batch([text])[0]
 
     def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        return self._embed_with_task_type(texts, _TASK_TYPE_DOCUMENT)
+
+    def embed_query(self, text: str) -> list[float]:
+        return self._embed_with_task_type([text], _TASK_TYPE_QUERY)[0]
+
+    def _embed_with_task_type(self, texts: list[str], task_type: str) -> list[list[float]]:
         if not texts:
             return []
 
@@ -62,7 +71,7 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
                 response = self._client.models.embed_content(
                     model=self._model,
                     contents=texts,
-                    config=types.EmbedContentConfig(task_type=_TASK_TYPE),
+                    config=types.EmbedContentConfig(task_type=task_type),
                 )
                 return [embedding.values for embedding in response.embeddings]
 
@@ -71,8 +80,8 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
                 status_code = getattr(exc, "code", None)
                 if status_code in _RETRYABLE_STATUS_CODES and attempt < MAX_ATTEMPTS:
                     logger.warning(
-                        "Gemini embed_content failed (status=%s), retrying (%d/%d)",
-                        status_code, attempt + 1, MAX_ATTEMPTS,
+                        "Gemini embed_content failed (status=%s, task_type=%s), retrying (%d/%d)",
+                        status_code, task_type, attempt + 1, MAX_ATTEMPTS,
                     )
                     time.sleep(BACKOFF_SECONDS[attempt - 1])
                     continue
