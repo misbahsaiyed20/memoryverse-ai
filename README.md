@@ -273,6 +273,64 @@ to embedding that batch one chunk at a time, so a single bad chunk
 never costs the rest of the batch — logged, not fatal, matching the
 "continue on individual chunk failure" requirement.
 
+## Sprint 7 Part 3 — Embedding pipeline integration
+
+Wires Part 2's `EmbeddingService` into the existing chunking flow — no
+new routes, no schema changes, no rewrite of any embedding code.
+
+**Architecture note:** there's no `process_document() → extract() →
+chunk()` linear function in this codebase — processing, chunking, and
+extraction are each independently triggered (`/process`, `/chunk`,
+`/extract`), by design since Sprint 5. Embedding hooks into the
+existing **chunking** background task (`ChunkingService.generate_and_store()`,
+right after chunks are committed) — the correct integration point per
+the intended pipeline shape (`... → Chunk → Generate Embeddings →
+Store`), just via the independent-trigger architecture already in
+place rather than a chain that doesn't exist.
+
+**Modified:** `app/services/chunking_service.py` (+`_trigger_embedding()`,
+called at the end of a successful chunking run), `app/api/deps.py`
+(+`get_vector_store()` — a lazy singleton factory, following the exact
+same pattern as `get_storage_service()`; needed because chunking's
+background task has no access to `app.state.vector_store`, which is
+only reachable from request/startup context).
+
+**Embedding failures never fail chunking** — `_trigger_embedding()`
+catches everything internally and only logs a warning; the `/chunk`
+endpoint's response and the document's chunking result are completely
+unaffected by a Gemini outage or any other embedding failure.
+
+## Sprint 8 Part 1 — Semantic retrieval infrastructure
+
+Pure retrieval only — no AI-generated answers, no chat, no RAG, no
+routes, no frontend.
+
+**New:** `app/services/search_service.py` — `SearchService.search(query,
+top_k=5)`: embeds the query, calls `VectorStore.query()`, returns
+matching chunks (`chunk_id`, `document_id`, `filename`, `chunk_index`,
+`distance`, `text`, full `metadata`). Both dependencies
+(`EmbeddingProvider`, `VectorStore`) are constructor-injected — never
+instantiates Chroma or Gemini directly.
+
+**Two small, additive changes to existing files** (nothing's behavior
+changed for existing callers):
+- `EmbeddingProvider` interface gained a new abstract method,
+  `embed_query()` — distinct from `embed_text()`/`embed_batch()`, which
+  keep embedding for *indexing*. `GeminiEmbeddingProvider` implements it
+  using Gemini's `RETRIEVAL_QUERY` task type instead of
+  `RETRIEVAL_DOCUMENT` (asymmetric embedding improves retrieval
+  quality). `embed_text()`/`embed_batch()` are unchanged.
+- `GeminiEmbeddingProvider` internally refactored to share retry logic
+  between the three methods — no external behavior change.
+
+**Known limitation, not fixed:** `distance` is Chroma's raw (unbounded,
+un-normalized) squared-L2 distance — the `career_brain` collection has
+no explicit distance metric configured (Sprint 7 Part 1 left it at
+Chroma's default). Converting this into a bounded 0–1 similarity score
+would require recreating the collection with `cosine` explicitly
+configured, which would orphan every embedding already stored by
+Sprint 7 — out of scope here. Lower `distance` = more similar either way.
+
 ## Known items / notes
 
 - `npm audit` reports one moderate advisory nested inside Next.js's own
