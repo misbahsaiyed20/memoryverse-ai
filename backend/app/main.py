@@ -15,7 +15,7 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.v1 import auth, dashboard, documents, health
+from app.api.v1 import auth, dashboard, documents, health, search
 from app.core.config import settings
 from app.db.base import init_db
 from app.embeddings.chroma_vector_store import ChromaVectorStore
@@ -60,3 +60,4 @@ app.include_router(health.router, prefix="/api/v1")
 app.include_router(auth.router, prefix="/api/v1")
 app.include_router(dashboard.router, prefix="/api/v1")
 app.include_router(documents.router, prefix="/api/v1")
+app.include_router(search.router, prefix="/api/v1")

@@ -32,8 +32,24 @@ class SearchService:
         self.embedding_provider = embedding_provider
         self.vector_store = vector_store
 
-    def search(self, query: str, top_k: int = DEFAULT_TOP_K) -> list[dict[str, Any]]:
+    def search(
+        self,
+        query: str,
+        top_k: int = DEFAULT_TOP_K,
+        where: dict[str, Any] | None = None,
+    ) -> list[dict[str, Any]]:
         """Embed `query` and return the top_k most similar stored chunks.
+
+        `where` is an opaque Chroma-style metadata filter, forwarded
+        as-is to VectorStore.query() — SearchService doesn't interpret
+        it. Added so a caller (the /search route) can scope results to
+        a specific set of documents (e.g. "only this user's own
+        documents") without SearchService needing to know anything
+        about users, ownership, or Postgres — that stays entirely the
+        caller's responsibility, keeping this class's job exactly what
+        it was in Sprint 8 Part 1: embed a query, search, return
+        results. Omitting `where` preserves every existing behavior
+        exactly (default None).
 
         Never raises: an empty/invalid query, an empty vector store, or
         an embedding/query failure all result in an empty list plus a
@@ -66,6 +82,7 @@ class SearchService:
                 collection_name=COLLECTION_NAME,
                 query_embeddings=[query_embedding],
                 n_results=top_k,
+                where=where,
             )
         except Exception:
             logger.exception("Search failed: vector store query error.")
