@@ -13,9 +13,11 @@ from app.schemas.document import DocumentOut, DocumentRenameRequest
 from app.services.chunking_service import ChunkingService
 from app.services.document_processing_service import DocumentProcessingService
 from app.services.document_service import DocumentService
+from app.services.extraction_service import ExtractionService
 from app.services.storage.base import StorageService
 from app.services.task_runner import schedule_document_chunking, schedule_document_processing
 from app.utils.response import success_response
+
 
 router = APIRouter(prefix="/documents", tags=["documents"])
 
@@ -152,4 +154,26 @@ def chunk_document(
     return success_response(
         {"document_id": str(document_id), "chunking_status": "started"},
         "Chunking started.",
+    )
+
+@router.post("/{document_id}/extract")
+def extract_document(
+    document_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """Extracts structured entities (skills, projects, certifications,
+    etc.) from this document's chunks and persists them as KnowledgeNode
+    rows. Unlike /process and /chunk, this runs synchronously and
+    returns the real count once extraction finishes — there is no
+    "started" response, because nodes_created can't be known until the
+    work is done. For a large document this means a slower response,
+    not a background job; see ExtractionService's docstring for why.
+    """
+    service = ExtractionService(db)
+    document = service.validate_for_extraction(document_id, current_user.id)
+    nodes_created = service.run(document)
+    return success_response(
+        {"nodes_created": nodes_created},
+        "Extraction completed successfully.",
     )
