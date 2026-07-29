@@ -1,72 +1,85 @@
-🚀 MEMORYVERSE AI — PROJECT MASTER CONTEXT (v2.0)
 
-Version: 2.0
-Status: Sprint 2 Completed → Sprint 3 Planning
-Purpose: Permanent project reference for all future development.
+# 🚀 MEMORYVERSE AI — PROJECT MASTER CONTEXT (v2.0)
 
-1. Project Vision
+**Version:** 2.0
+**Status:** Sprint 2 Completed → Sprint 3 Planning
+**Purpose:** Permanent project reference for all future development.
 
-MemoryVerse AI is an AI-powered Digital Identity & Career Intelligence Platform.
+---
 
-The goal is to transform fragmented academic and professional documents into an intelligent, searchable, evidence-backed Career Brain that helps users understand, organize, and interact with their professional identity.
+# 1. Project Vision
 
-This is not just another RAG chatbot.
+MemoryVerse AI is an AI-powered **Digital Identity & Career Intelligence Platform**.
+
+The goal is to transform fragmented academic and professional documents into an intelligent, searchable, evidence-backed **Career Brain** that helps users understand, organize, and interact with their professional identity.
+
+This is **not** just another RAG chatbot.
 
 The product is an intelligent career assistant that always provides trustworthy answers backed by document evidence.
 
-2. Ultimate Goal
+---
+
+# 2. Ultimate Goal
 
 Build a hackathon-winning project that is:
 
-technically excellent
-visually impressive
-AI-driven
-trustworthy
-production-quality
-memorable during judging
+* technically excellent
+* visually impressive
+* AI-driven
+* trustworthy
+* production-quality
+* memorable during judging
 
 Every development decision must increase the project's chances of winning.
 
-3. Decision Authority
-ChatGPT is the Project Architect.
+---
+
+# 3. Decision Authority
+
+## ChatGPT is the Project Architect.
 
 ChatGPT decides:
 
-overall architecture
-sprint planning
-database schema
-API contracts
-roadmap
-feature prioritization
-AI architecture
-scalability
-security
-implementation order
-code review
-project strategy
-Claude is the Senior Implementation Engineer.
+* overall architecture
+* sprint planning
+* database schema
+* API contracts
+* roadmap
+* feature prioritization
+* AI architecture
+* scalability
+* security
+* implementation order
+* code review
+* project strategy
+
+---
+
+## Claude is the Senior Implementation Engineer.
 
 Claude is responsible ONLY for implementation.
 
 Claude may:
 
-write code
-improve implementation
-optimize performance
-ask implementation questions
+* write code
+* improve implementation
+* optimize performance
+* ask implementation questions
 
 Claude may NEVER:
 
-redesign architecture
-change sprint scope
-rename APIs
-change database design
-modify project vision
-introduce new frameworks without approval
+* redesign architecture
+* change sprint scope
+* rename APIs
+* change database design
+* modify project vision
+* introduce new frameworks without approval
 
 Architecture is always finalized before Claude writes code.
 
-4. Product Philosophy
+---
+
+# 4. Product Philosophy
 
 MemoryVerse AI must be:
 
@@ -84,30 +97,43 @@ Every answer must be explainable.
 
 Every extracted fact must link back to its source document.
 
-5. Core Principles
-PostgreSQL
+---
 
-The database is the single source of truth.
+# 5. Core Principles
 
-Gemini
+## PostgreSQL
+
+The database is the **single source of truth**.
+
+---
+
+## Gemini
 
 Gemini performs reasoning only.
 
 Gemini never permanently stores knowledge.
 
-ChromaDB
+---
+
+## ChromaDB
 
 Stores semantic embeddings only.
 
 Never acts as the source of truth.
 
-Career Brain
+---
+
+## Career Brain
 
 Career Brain is the central knowledge model.
 
 Every uploaded document enriches the Career Brain.
 
-6. High-Level Architecture
+---
+
+# 6. High-Level Architecture
+
+```
 User
 
 ↓
@@ -173,17 +199,30 @@ Timeline
 ↓
 
 Analytics
-7. Technology Stack
-Frontend
-Next.js 15
-TypeScript
-Tailwind CSS
-shadcn/ui
-Backend
-FastAPI
-SQLAlchemy
-Pydantic
-Authentication
+```
+
+---
+
+# 7. Technology Stack
+
+## Frontend
+
+* Next.js 15
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+
+---
+
+## Backend
+
+* FastAPI
+* SQLAlchemy
+* Pydantic
+
+---
+
+## Authentication
 
 Firebase Authentication
 
@@ -191,11 +230,15 @@ Google Login
 
 Firebase Admin SDK
 
-Database
+---
+
+## Database
 
 PostgreSQL
 
-Storage
+---
+
+## Storage
 
 StorageService abstraction
 
@@ -203,7 +246,9 @@ Local storage first
 
 Cloud storage later
 
-AI
+---
+
+## AI
 
 Gemini
 
@@ -211,32 +256,38 @@ ChromaDB
 
 RAG
 
-Version Control
+---
+
+## Version Control
 
 Git
 
 GitHub
 
-8. Coding Standards
+---
+
+# 8. Coding Standards
 
 Always follow:
 
-SOLID Principles
-DRY
-Clean Architecture
-Modular Design
-Type Safety
-Dependency Injection where appropriate
-Proper logging
-Proper validation
-Meaningful naming
-Small reusable functions
-Centralized configuration
-Production-quality code
+* SOLID Principles
+* DRY
+* Clean Architecture
+* Modular Design
+* Type Safety
+* Dependency Injection where appropriate
+* Proper logging
+* Proper validation
+* Meaningful naming
+* Small reusable functions
+* Centralized configuration
+* Production-quality code
 
 No shortcuts.
 
-9. Architecture Rules
+---
+
+# 9. Architecture Rules
 
 Routes only call services.
 
@@ -252,10 +303,13 @@ Never hardcode secrets.
 
 Everything should remain modular and scalable.
 
-10. Security Rules
+---
+
+# 10. Security Rules
 
 Never commit:
 
+```
 .env
 
 .env.local
@@ -267,19 +321,24 @@ node_modules
 .venv
 
 __pycache__
+```
 
 Always:
 
-validate uploaded files
-verify Firebase tokens
-validate MIME types
-validate file size
-sanitize filenames
-secure API endpoints
-11. Git Workflow
+* validate uploaded files
+* verify Firebase tokens
+* validate MIME types
+* validate file size
+* sanitize filenames
+* secure API endpoints
+
+---
+
+# 11. Git Workflow
 
 Every sprint ends with:
 
+```
 git status
 
 git add .
@@ -287,15 +346,19 @@ git add .
 git commit
 
 git push
+```
 
 Never push secrets.
 
 Every sprint should have one meaningful commit.
 
-12. Development Workflow
+---
+
+# 12. Development Workflow
 
 Every sprint must follow this sequence.
 
+```
 Architecture Design
 
 ↓
@@ -341,11 +404,15 @@ Git Commit
 ↓
 
 GitHub Push
+```
 
 No implementation starts before architecture is approved.
 
-13. Sprint Roadmap
-✅ Sprint 1
+---
+
+# 13. Sprint Roadmap
+
+## ✅ Sprint 1
 
 Foundation
 
@@ -353,14 +420,17 @@ Completed.
 
 Included:
 
-Next.js setup
-FastAPI setup
-PostgreSQL connection
-Storage abstraction
-Health API
-API versioning
-README
-✅ Sprint 2
+* Next.js setup
+* FastAPI setup
+* PostgreSQL connection
+* Storage abstraction
+* Health API
+* API versioning
+* README
+
+---
+
+## ✅ Sprint 2
 
 Authentication
 
@@ -368,65 +438,77 @@ Completed.
 
 Included:
 
-Firebase Authentication
-Google Login
-Firebase Admin verification
-Protected routes
-User model
-Dashboard
-User creation
-PostgreSQL integration
-GitHub setup
+* Firebase Authentication
+* Google Login
+* Firebase Admin verification
+* Protected routes
+* User model
+* Dashboard
+* User creation
+* PostgreSQL integration
+* GitHub setup
 
 Everything verified working.
 
-Sprint 3
+---
+
+## Sprint 3
 
 Document Upload System
 
 Includes:
 
-upload API
-document model
-metadata
-secure uploads
-storage implementation
-CRUD
-dashboard integration
+* upload API
+* document model
+* metadata
+* secure uploads
+* storage implementation
+* CRUD
+* dashboard integration
 
 No AI.
 
-Sprint 4
+---
+
+## Sprint 4
 
 Document Processing
 
-PDF extraction
-DOCX extraction
-OCR preparation
-Sprint 5
+* PDF extraction
+* DOCX extraction
+* OCR preparation
+
+---
+
+## Sprint 5
 
 Chunking Engine
 
-smart chunking
-overlap
-metadata
-Sprint 6
+* smart chunking
+* overlap
+* metadata
+
+---
+
+## Sprint 6
 
 Gemini Structured Extraction
 
 Extract:
 
-skills
-projects
-education
-experience
-certificates
-technologies
-organizations
+* skills
+* projects
+* education
+* experience
+* certificates
+* technologies
+* organizations
 
 Return structured JSON.
 
-Sprint 7
+---
+
+## Sprint 7
 
 Career Brain
 
@@ -436,7 +518,9 @@ Evidence Links
 
 Entity Relationships
 
-Sprint 8
+---
+
+## Sprint 8
 
 Embeddings
 
@@ -444,7 +528,9 @@ ChromaDB
 
 Semantic Indexing
 
-Sprint 9
+---
+
+## Sprint 9
 
 Hybrid Search
 
@@ -454,27 +540,34 @@ Semantic
 
 Evidence Ranking
 
-Sprint 10
+---
+
+## Sprint 10
 
 Verse AI
 
 Evidence-backed conversational AI.
 
-Sprint 11
+---
+
+## Sprint 11
 
 Career Intelligence
 
 Generate:
 
-missing skills
-strengths
-weaknesses
-resume insights
-career timeline
-learning progression
-certificate analytics
-project analytics
-Sprint 12
+* missing skills
+* strengths
+* weaknesses
+* resume insights
+* career timeline
+* learning progression
+* certificate analytics
+* project analytics
+
+---
+
+## Sprint 12
 
 Polish
 
@@ -488,11 +581,13 @@ Presentation
 
 Demo
 
-14. Hackathon Winning Strategy
+---
+
+# 14. Hackathon Winning Strategy
 
 The project must excel in four areas.
 
-1. Engineering
+## 1. Engineering
 
 Clean architecture.
 
@@ -500,7 +595,9 @@ Scalable.
 
 Professional code.
 
-2. AI
+---
+
+## 2. AI
 
 Evidence-backed.
 
@@ -510,7 +607,9 @@ Explainable.
 
 No hallucinations.
 
-3. User Experience
+---
+
+## 3. User Experience
 
 Modern UI.
 
@@ -520,16 +619,21 @@ Beautiful.
 
 Interactive.
 
-4. Demo
+---
+
+## 4. Demo
 
 Every feature must strengthen the final demo.
 
 If a feature doesn't improve the demo, reconsider building it.
 
-15. Demo Philosophy
+---
+
+# 15. Demo Philosophy
 
 The demo should tell a story:
 
+```
 Login
 
 ↓
@@ -579,10 +683,13 @@ Original document opens
 ↓
 
 Relevant text highlighted
+```
 
 This creates trust and showcases the system's intelligence.
 
-16. Current Project Status
+---
+
+# 16. Current Project Status
 
 Current Sprint:
 
@@ -614,20 +721,25 @@ Branch:
 
 main
 
-17. Definition of Done
+---
+
+# 17. Definition of Done
 
 A sprint is complete only if:
 
-backend builds
-frontend builds
-APIs tested
-database verified
-UI verified
-security reviewed
-GitHub updated
-documentation updated
-ChatGPT reviews implementation
-18. Rules for Every Future Chat
+* backend builds
+* frontend builds
+* APIs tested
+* database verified
+* UI verified
+* security reviewed
+* GitHub updated
+* documentation updated
+* ChatGPT reviews implementation
+
+---
+
+# 18. Rules for Every Future Chat
 
 When this document is provided:
 
@@ -641,29 +753,36 @@ Continue from the current sprint.
 
 Preserve all previous architectural decisions unless explicitly instructed otherwise.
 
-19. Immediate Next Objective
+---
+
+# 19. Immediate Next Objective
 
 Sprint 3.
 
 Before writing any code:
 
-Design Sprint 3 architecture.
-Design database schema.
-Design storage layer.
-Design API contracts.
-Design validation.
-Review scalability.
-Review security.
-Generate a detailed Claude implementation prompt.
-Review the implementation after Claude completes it.
-Commit and push only after verification.
-20. Success Criteria
+1. Design Sprint 3 architecture.
+2. Design database schema.
+3. Design storage layer.
+4. Design API contracts.
+5. Design validation.
+6. Review scalability.
+7. Review security.
+8. Generate a detailed Claude implementation prompt.
+9. Review the implementation after Claude completes it.
+10. Commit and push only after verification.
+
+---
+
+# 20. Success Criteria
 
 The project succeeds if it delivers:
 
-A seamless document upload experience.
-An evidence-backed Career Brain.
-Trustworthy AI responses.
-Clear career insights.
-A polished, memorable demo.
-Clean, maintainable architecture that can continue beyond the hackathon.
+* A seamless document upload experience.
+* An evidence-backed Career Brain.
+* Trustworthy AI responses.
+* Clear career insights.
+* A polished, memorable demo.
+* Clean, maintainable architecture that can continue beyond the hackathon.
+
+---

@@ -20,7 +20,7 @@ from app.embeddings.embedding_provider import EmbeddingProvider
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MODEL = "text-embedding-004"
+DEFAULT_MODEL = "models/gemini-embedding-001"
 MAX_ATTEMPTS = 3
 BACKOFF_SECONDS = (2, 4, 8)
 _RETRYABLE_STATUS_CODES = {429, 500, 503}

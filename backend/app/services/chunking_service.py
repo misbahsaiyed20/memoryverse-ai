@@ -137,6 +137,7 @@ class ChunkingService:
                 len(chunk_rows),
             )
 
+            print(">>>>>>>> CALLING _trigger_embedding <<<<<<<<")
             self._trigger_embedding(document_id)
 
             return len(chunk_rows)

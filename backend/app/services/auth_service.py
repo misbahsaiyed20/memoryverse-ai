@@ -17,32 +17,20 @@ from app.models.user import User
 
 logger = logging.getLogger(__name__)
 
-
 def verify_firebase_token(id_token: str) -> dict:
-    """Verify a Firebase ID token and return its decoded claims.
+    """Verify a Firebase ID token and return its decoded claims."""
 
-    Raises HTTPException(401) if the token is missing, malformed, or expired.
-    """
     try:
         get_firebase_app()
         return firebase_auth.verify_id_token(id_token)
-    except firebase_auth.InvalidIdTokenError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication token.",
-        ) from exc
-    except firebase_auth.ExpiredIdTokenError as exc:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication token has expired.",
-        ) from exc
-    except RuntimeError as exc:
-        # Firebase Admin not configured (missing service account file)
-        logger.error("Firebase Admin not configured: %s", exc)
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Authentication is not configured on the server.",
-        ) from exc
+
+    except Exception as exc:
+        print("===================================")
+        print("FIREBASE VERIFY ERROR")
+        print(type(exc))
+        print(repr(exc))
+        print("===================================")
+        raise
 
 
 def get_or_create_user(db: Session, decoded_token: dict) -> User:

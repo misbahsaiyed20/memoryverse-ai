@@ -44,13 +44,10 @@ def get_current_user(
     authorization: str = Header(default=""),
     db: Session = Depends(get_db),
 ) -> User:
-    """Verify the Bearer token on every protected request and return the User.
+    """Verify the Bearer token on every protected request and return the User."""
 
-    Also creates the user record on first login, so this one dependency
-    covers both "log in" and "stay logged in" — any protected route that
-    depends on this works correctly whether or not /auth/login was called
-    first.
-    """
+    print("get_current_user called")
+
     if not authorization.startswith("Bearer "):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -58,5 +55,19 @@ def get_current_user(
         )
 
     id_token = authorization.removeprefix("Bearer ").strip()
-    decoded_token = verify_firebase_token(id_token)
-    return get_or_create_user(db, decoded_token)
+    print("Token length:", len(id_token))
+    print("Token first 30 chars:", id_token[:30])
+    try:
+       decoded_token = verify_firebase_token(id_token)
+       print("TOKEN VERIFIED")
+
+       user = get_or_create_user(db, decoded_token)
+       print("USER RETURNED:", user)
+
+       return user
+
+    except Exception as e:
+       import traceback
+       traceback.print_exc()
+       print("ERROR:", repr(e))
+       raise

@@ -9,7 +9,7 @@ documents table directly.
 import io
 import logging
 import uuid
-
+from app.models.document_chunk import DocumentChunk
 from fastapi import HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
@@ -101,6 +101,13 @@ class DocumentService:
         return document
 
     def delete(self, document: Document, storage: StorageService) -> None:
-        storage.delete(document.storage_path)
-        self.db.delete(document)
-        self.db.commit()
+      from app.models.document_chunk import DocumentChunk
+
+      self.db.query(DocumentChunk).filter(
+        DocumentChunk.document_id == document.id
+        ).delete(synchronize_session=False)
+
+      storage.delete(document.storage_path)
+
+      self.db.delete(document)
+      self.db.commit()

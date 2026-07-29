@@ -32,7 +32,7 @@ class Settings(BaseSettings):
     # future model rename/deprecation is a one-line env var change,
     # not a code change.
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash"
 
     # Vector storage (Sprint 7) — persistent local ChromaDB path.
     chroma_db_path: str = "./chromadb"
@@ -49,3 +49,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+print("Gemini model =", settings.gemini_model)
