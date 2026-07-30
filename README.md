@@ -1,306 +1,256 @@
-# 🚀 MemoryVerse AI
+# 🧠 MemoryVerse AI
 
-> **An AI-Powered Digital Identity System**
->
-> MemoryVerse AI transforms scattered academic and professional documents into an intelligent, searchable knowledge repository using AI, Knowledge Graphs, Vector Search, and Retrieval-Augmented Generation (RAG).
+## AI-Powered Digital Identity System for Students & Professionals
 
----
+MemoryVerse AI transforms scattered academic and professional records into an intelligent, searchable digital identity.
 
-## 📖 Overview
+Students continuously generate valuable digital footprints through certificates, resumes, projects, internships, portfolios, and achievements. However, these records are usually distributed across folders, emails, cloud storage, and devices.
 
-Throughout a student's academic and professional journey, important documents such as certificates, resumes, internship letters, project reports, portfolios, and achievements become scattered across folders, emails, and cloud drives.
-
-MemoryVerse AI automatically understands, organizes, connects, and retrieves this information, allowing users to build a **digital identity** instead of just storing files.
-
-This project was developed for **MemoryVerse AI '26 Hackathon**.
+MemoryVerse AI aims to solve this problem by creating a centralized knowledge system that understands a person's journey, connects experiences, and makes important information instantly accessible.
 
 ---
 
-# ✨ Features
+# 🚀 Problem Statement
 
-### 📂 AI Document Ingestion
+Traditional storage platforms only store files. They do not understand:
 
-- Upload Certificates
-- Upload Resumes
-- Upload Internship Letters
-- Upload Project Reports
-- Upload Academic Documents
-- Secure file storage
+* What skills a student has developed
+* Which projects demonstrate those skills
+* Which certifications support their knowledge
+* How experiences connect over time
 
----
-
-### 🧠 Intelligent Processing
-
-After upload, the system automatically:
-
-- Processes documents
-- Extracts text
-- Splits documents into semantic chunks
-- Generates vector embeddings
-- Extracts structured entities using Gemini AI
+MemoryVerse AI creates an intelligent layer over personal records to organize, analyze, and represent a user's professional growth.
 
 ---
 
-### 🏷 Intelligent Categorization
+# 💡 Solution Overview
 
-MemoryVerse AI automatically identifies:
-
-- Skills
-- Technologies
-- Projects
-- Certifications
-- Achievements
-- Organizations
-- Education
-- Internships
-
----
-
-### 🔗 Knowledge Graph
-
-Extracted entities are stored as:
-
-- Knowledge Nodes
-- Knowledge Relationships (Edges)
-
-This enables the system to understand connections such as:
+MemoryVerse AI follows an AI-powered document intelligence pipeline:
 
 ```
-Python
-      │
-      ▼
-Machine Learning Project
-      │
-      ▼
-AI Internship
+Upload Documents
+        |
+        ↓
+Document Processing
+        |
+        ↓
+Text Extraction & Normalization
+        |
+        ↓
+AI Understanding Layer
+        |
+        ↓
+Career Knowledge Repository
+        |
+        ↓
+Search, Insights & Digital Timeline
+```
+
+The system preserves original documents while building structured knowledge from uploaded information.
+
+---
+
+# ✨ Current Features
+
+## 📂 Intelligent Document Management
+
+Users can upload and manage academic/professional documents including:
+
+* Resumes
+* Certificates
+* Project Reports
+* Internship Documents
+* Achievement Records
+
+Original files remain accessible while metadata and processing information are maintained.
+
+---
+
+## ⚙️ Document Processing Pipeline
+
+Implemented processing workflow:
+
+* Document ingestion
+* File validation
+* Text extraction pipeline
+* Text normalization
+* Background processing architecture
+
+This creates the foundation required for AI-powered document understanding.
+
+---
+
+## 🧩 Document Chunking System
+
+Large documents are divided into meaningful smaller sections to prepare them for:
+
+* Semantic search
+* Embedding generation
+* Retrieval-Augmented Generation (RAG)
+
+Chunking improves future AI retrieval accuracy by allowing the system to search relevant sections instead of entire files.
+
+---
+
+## 📊 Dashboard & Analytics
+
+The platform provides a dashboard layer for monitoring:
+
+* Uploaded documents
+* Processing status
+* Document statistics
+
+---
+
+# 🏗️ System Architecture
+
+```
+                    User Documents
+                          |
+                          ↓
+              Document Upload Service
+                          |
+                          ↓
+              Processing Pipeline
+                          |
+              ---------------------
+              |                   |
+              ↓                   ↓
+        Text Extraction       Metadata Storage
+              |
+              ↓
+        AI Extraction Layer
+              |
+              ↓
+        Career Brain Knowledge Model
+              |
+     -------------------------------
+     |              |              |
+   Skills       Projects    Certifications
+     |
+     ↓
+Semantic Search + AI Insights
 ```
 
 ---
 
-### 🔍 Semantic Search
+# 🛠️ Technology Stack
 
-Instead of keyword matching, MemoryVerse AI performs semantic search using vector embeddings.
+## Frontend
 
-Example queries:
+* Next.js 15
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
 
-- Show all my AI projects
-- Show Python certifications
-- Show internship documents
-- Show React projects
-- Show my latest resume
+## Backend
 
----
+* FastAPI
+* Python
+* SQLAlchemy
 
-### 🤖 Verse AI Assistant
+## Database
 
-Users can ask natural language questions like:
+* PostgreSQL
 
-> What projects have I completed?
+## Authentication
 
-> What certifications do I have?
+* Firebase Authentication
 
-> What skills should I improve?
+## AI Roadmap
 
-Verse AI answers using Retrieval-Augmented Generation (RAG) grounded in the user's uploaded documents.
-
----
-
-### 📊 Dashboard
-
-Provides an overview of:
-
-- Uploaded Documents
-- Processing Status
-- Knowledge Statistics
-- Technology Distribution
-- Top Skills
-- Recent Documents
+* Google Gemini
+* NLP-based entity extraction
+* Embeddings
+* Vector Database
+* Retrieval-Augmented Generation (RAG)
 
 ---
 
-### 🧠 Career Brain
+# 🧠 AI Knowledge Model (Career Brain)
 
-Automatically builds a structured career profile including:
+The future intelligence layer of MemoryVerse AI is designed around a structured knowledge model.
 
-- Skills
-- Projects
-- Technologies
-- Certifications
-- Achievements
-- Organizations
-- Internships
+Example relationships:
+
+```
+Certification
+      |
+      ↓
+    Skill
+      |
+      ↓
+   Project
+      |
+      ↓
+ Internship
+      |
+      ↓
+ Career Growth
+```
+
+This allows the system to understand not only documents, but the story behind them.
 
 ---
 
-### 📅 Timeline
+# 🔍 Smart Retrieval Vision
 
-Visualizes the user's academic and professional journey chronologically.
+The goal is to enable natural language queries:
+
+Examples:
+
+> "Show my AI projects"
+
+> "Find my latest resume"
+
+> "Which certificates support my Python skills?"
+
+> "Show my internship-related documents"
+
+Using semantic search and RAG, users can retrieve information without manually searching folders.
+
+---
+
+# 📅 Digital Journey Timeline
+
+MemoryVerse AI is designed to automatically generate a professional growth timeline:
 
 Example:
 
 ```
-2023
-│
-├── Python Certification
+2023 → Python Certification
 
-2024
-│
-├── Machine Learning Project
+2024 → Data Science Project
 
-2025
-│
-├── AI Internship
+2025 → Industry Internship
+
+2026 → AI Portfolio Development
 ```
-
----
-
-### 🕸 Knowledge Graph Visualization
-
-Displays relationships between extracted entities through an interactive graph.
-
----
-
-# 🏗 System Architecture
-
-```
-                User
-
-                  │
-
-          Upload Documents
-
-                  │
-
-          FastAPI Backend
-
-                  │
-
-        Document Processing
-
-                  │
-
-            Text Extraction
-
-                  │
-
-             Chunking Engine
-
-                  │
-
-        Google Gemini AI
-
-                  │
-
-      Entity & Relation Extraction
-
-                  │
-
-        Knowledge Graph Builder
-
-          ┌──────────────┐
-          │ PostgreSQL   │
-          └──────────────┘
-
-                  │
-
-            Embeddings
-
-                  │
-
-             ChromaDB
-
-                  │
-
-        Retrieval (Semantic Search)
-
-                  │
-
-             Verse AI (RAG)
-
-                  │
-
-       Dashboard • Timeline
-      Career Brain • Search
-```
-
----
-
-# 🛠 Tech Stack
-
-## Frontend
-
-- Next.js 15
-- React
-- TypeScript
-- Tailwind CSS
-- Shadcn UI
-
----
-
-## Backend
-
-- FastAPI
-- SQLAlchemy
-- PostgreSQL
-- Pydantic
-
----
-
-## AI & Machine Learning
-
-- Google Gemini API
-- Retrieval-Augmented Generation (RAG)
-- Knowledge Graph
-- NLP
-- Semantic Chunking
-- Vector Embeddings
-
----
-
-## Vector Database
-
-- ChromaDB
-
----
-
-## Authentication
-
-- Firebase Authentication
-- Google Sign-In
-
----
-
-## Storage
-
-- Local Document Storage
 
 ---
 
 # 📁 Project Structure
 
 ```
-memoryverse-ai
-│
+memoryverse-ai/
+
 ├── frontend/
-│
+│   ├── Next.js Application
+│   └── UI Components
+
 ├── backend/
-│   ├── app/
-│   ├── api/
-│   ├── services/
-│   ├── models/
-│   ├── extraction/
-│   ├── search/
-│   ├── embeddings/
-│   └── db/
-│
-├── uploads/
-├── chromadb/
-└── sql/
+│   ├── FastAPI Application
+│   ├── API Routes
+│   ├── Database Models
+│   ├── Processing Services
+│   └── Document Pipeline
+
+└── README.md
 ```
 
 ---
 
-# ⚙ Installation
+# ⚙️ Local Setup
 
 ## Backend
 
@@ -309,12 +259,9 @@ cd backend
 
 python -m venv venv
 
-# Windows
-venv\Scripts\activate
-
 pip install -r requirements.txt
 
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 8000
 ```
 
 ---
@@ -331,112 +278,34 @@ npm run dev
 
 ---
 
-## Database
+# 🎯 Hackathon Alignment - MemoryVerse AI '26
 
-Create PostgreSQL database:
+This project addresses the core challenge of creating an AI-powered Digital Identity System.
 
-```
-memoryverse
-```
-
-Run required SQL migration scripts.
-
----
-
-# 🔄 Workflow
-
-```
-Upload Document
-        │
-        ▼
-Document Processing
-        │
-        ▼
-Chunk Generation
-        │
-        ▼
-Gemini AI Extraction
-        │
-        ▼
-Knowledge Graph
-        │
-        ▼
-Embeddings
-        │
-        ▼
-ChromaDB
-        │
-        ▼
-Semantic Search
-        │
-        ▼
-Verse AI
-```
+| Challenge Requirement    | Implementation                |
+| ------------------------ | ----------------------------- |
+| Data Ingestion           | ✅ Document upload system      |
+| Intelligent Organization | ⚙️ AI extraction architecture |
+| Knowledge Connections    | ⚙️ Career Brain design        |
+| Digital Timeline         | ⚙️ Planned intelligence layer |
+| Smart Retrieval          | ⚙️ RAG-ready architecture     |
 
 ---
 
-# 💡 AI Concepts Used
+# 🔮 Future Enhancements
 
-- Natural Language Processing (NLP)
-- Retrieval-Augmented Generation (RAG)
-- Knowledge Graph
-- Entity Extraction
-- Semantic Search
-- Vector Embeddings
-- Similarity Search
-- AI-powered Document Understanding
-
----
-
-# 📸 Screenshots
-
-Add screenshots of:
-
-- Login Page
-- Dashboard
-- Upload Page
-- Career Brain
-- Timeline
-- Knowledge Graph
-- Semantic Search
-- Verse AI
+* Gemini-powered document understanding
+* Automatic skill extraction
+* Knowledge graph generation
+* ChromaDB/vector database integration
+* Semantic search
+* AI career insights
+* Personalized professional recommendations
 
 ---
 
-# 🚀 Future Improvements
+# 👩‍💻 Built For
 
-- Cloud Deployment
-- Resume Generation
-- Interview Preparation
-- Skill Gap Analysis
-- Learning Recommendations
-- Multi-language Support
-- OCR for Scanned Documents
-- Real-time Collaboration
+**MemoryVerse AI '26 Hackathon**
 
----
-
-# 👩‍💻 Developed By
-
-**Misba Saiyed**
-
-GitHub:
-https://github.com/misbahsaiyed20
-
----
-
-# 🙏 Acknowledgements
-
-- Google Gemini AI
-- ChromaDB
-- FastAPI
-- Next.js
-- PostgreSQL
-- Firebase Authentication
-- MemoryVerse AI '26 Hackathon
-
----
-
-# 📜 License
-
-This project was developed for educational and hackathon purposes.
+Building the future of intelligent digital identity systems where your achievements are not just stored — they are understood.
