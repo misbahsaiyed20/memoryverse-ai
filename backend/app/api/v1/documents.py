@@ -172,8 +172,8 @@ def extract_document(
     """
     service = ExtractionService(db)
     document = service.validate_for_extraction(document_id, current_user.id)
-    nodes_created = service.run(document)
+    summary = service.run(document)
     return success_response(
-        {"nodes_created": nodes_created},
+        {"nodes_created": summary.nodes_created, "edges_created": summary.edges_created},
         "Extraction completed successfully.",
     )

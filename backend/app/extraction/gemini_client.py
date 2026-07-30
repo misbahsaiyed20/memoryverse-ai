@@ -203,6 +203,61 @@ def extract_from_text(text_batch: str) -> GeminiExtractionResult:
     ) from last_error
 
 
+def generate_json(prompt: str, response_json_schema: dict, model_cls: type) -> object:
+    """Generic structured-JSON generation. Added for
+    CareerIntelligenceService rather than duplicating the retry/backoff
+    loop a third time — same client, same MAX_ATTEMPTS/BACKOFF_SECONDS/
+    retryable-status discipline as extract_from_text() and generate_text(),
+    parameterized by a caller-supplied JSON schema and Pydantic model
+    instead of the hardwired extraction schema.
+
+    Raises GeminiGenerationError if every attempt fails.
+    """
+    last_error: Exception | None = None
+
+    for attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            client = _get_client()
+            response = client.models.generate_content(
+                model=settings.gemini_model,
+                contents=prompt,
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_json_schema=response_json_schema,
+                    temperature=0.3,
+                ),
+            )
+            parsed_json = json.loads(response.text)
+            return model_cls.model_validate(parsed_json)
+
+        except genai_errors.APIError as exc:
+            last_error = exc
+            status_code = getattr(exc, "code", None)
+            if status_code in _RETRYABLE_STATUS_CODES and attempt < MAX_ATTEMPTS:
+                logger.warning(
+                    "Gemini generate_json failed (status=%s), retrying (%d/%d)",
+                    status_code, attempt + 1, MAX_ATTEMPTS,
+                )
+                time.sleep(BACKOFF_SECONDS[attempt - 1])
+                continue
+            break
+
+        except (json.JSONDecodeError, ValidationError) as exc:
+            last_error = exc
+            if attempt < MAX_ATTEMPTS:
+                logger.warning(
+                    "Gemini generate_json returned malformed/invalid output, "
+                    "retrying (%d/%d): %s",
+                    attempt + 1, MAX_ATTEMPTS, exc,
+                )
+                time.sleep(BACKOFF_SECONDS[attempt - 1])
+                continue
+            break
+
+    raise GeminiGenerationError(
+        f"Gemini JSON generation failed after {MAX_ATTEMPTS} attempts: {last_error}"
+    ) from last_error
+
 def generate_text(prompt: str) -> str:
     """Calls Gemini for a free-text (non-JSON) response and returns the
     raw answer text. Used by VerseAIService for RAG answers — no

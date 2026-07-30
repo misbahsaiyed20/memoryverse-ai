@@ -1,343 +1,442 @@
-# MemoryVerse AI
+# 🚀 MemoryVerse AI
 
-**Your Personal Career Intelligence Engine.**
-
-This is Sprint 1 — Module 1: project foundation only. No auth, uploads, database
-tables, AI, or business logic yet. Just a working frontend, a working backend
-with a `/health` route, and DB connection config wired up (no models).
+> **An AI-Powered Digital Identity System**
+>
+> MemoryVerse AI transforms scattered academic and professional documents into an intelligent, searchable knowledge repository using AI, Knowledge Graphs, Vector Search, and Retrieval-Augmented Generation (RAG).
 
 ---
 
-## Prerequisites
+## 📖 Overview
 
-- Node.js 18+ and npm
-- Python 3.11+
-- PostgreSQL 14+ (only needed once you actually connect — Sprint 1's backend
-  will boot without it since no models/queries exist yet)
+Throughout a student's academic and professional journey, important documents such as certificates, resumes, internship letters, project reports, portfolios, and achievements become scattered across folders, emails, and cloud drives.
+
+MemoryVerse AI automatically understands, organizes, connects, and retrieves this information, allowing users to build a **digital identity** instead of just storing files.
+
+This project was developed for **MemoryVerse AI '26 Hackathon**.
 
 ---
 
-## Frontend setup
+# ✨ Features
 
-```bash
-cd frontend
-cp .env.example .env.local   # already done, but re-run if you delete it
-npm install
-npm run dev
+### 📂 AI Document Ingestion
+
+- Upload Certificates
+- Upload Resumes
+- Upload Internship Letters
+- Upload Project Reports
+- Upload Academic Documents
+- Secure file storage
+
+---
+
+### 🧠 Intelligent Processing
+
+After upload, the system automatically:
+
+- Processes documents
+- Extracts text
+- Splits documents into semantic chunks
+- Generates vector embeddings
+- Extracts structured entities using Gemini AI
+
+---
+
+### 🏷 Intelligent Categorization
+
+MemoryVerse AI automatically identifies:
+
+- Skills
+- Technologies
+- Projects
+- Certifications
+- Achievements
+- Organizations
+- Education
+- Internships
+
+---
+
+### 🔗 Knowledge Graph
+
+Extracted entities are stored as:
+
+- Knowledge Nodes
+- Knowledge Relationships (Edges)
+
+This enables the system to understand connections such as:
+
+```
+Python
+      │
+      ▼
+Machine Learning Project
+      │
+      ▼
+AI Internship
 ```
 
-Runs at **http://localhost:3000**.
+---
 
-Stack: Next.js 15 (App Router) · TypeScript · Tailwind CSS · shadcn/ui
-(CLI configured via `components.json`, no components added yet).
+### 🔍 Semantic Search
+
+Instead of keyword matching, MemoryVerse AI performs semantic search using vector embeddings.
+
+Example queries:
+
+- Show all my AI projects
+- Show Python certifications
+- Show internship documents
+- Show React projects
+- Show my latest resume
 
 ---
 
-## Backend setup
+### 🤖 Verse AI Assistant
+
+Users can ask natural language questions like:
+
+> What projects have I completed?
+
+> What certifications do I have?
+
+> What skills should I improve?
+
+Verse AI answers using Retrieval-Augmented Generation (RAG) grounded in the user's uploaded documents.
+
+---
+
+### 📊 Dashboard
+
+Provides an overview of:
+
+- Uploaded Documents
+- Processing Status
+- Knowledge Statistics
+- Technology Distribution
+- Top Skills
+- Recent Documents
+
+---
+
+### 🧠 Career Brain
+
+Automatically builds a structured career profile including:
+
+- Skills
+- Projects
+- Technologies
+- Certifications
+- Achievements
+- Organizations
+- Internships
+
+---
+
+### 📅 Timeline
+
+Visualizes the user's academic and professional journey chronologically.
+
+Example:
+
+```
+2023
+│
+├── Python Certification
+
+2024
+│
+├── Machine Learning Project
+
+2025
+│
+├── AI Internship
+```
+
+---
+
+### 🕸 Knowledge Graph Visualization
+
+Displays relationships between extracted entities through an interactive graph.
+
+---
+
+# 🏗 System Architecture
+
+```
+                User
+
+                  │
+
+          Upload Documents
+
+                  │
+
+          FastAPI Backend
+
+                  │
+
+        Document Processing
+
+                  │
+
+            Text Extraction
+
+                  │
+
+             Chunking Engine
+
+                  │
+
+        Google Gemini AI
+
+                  │
+
+      Entity & Relation Extraction
+
+                  │
+
+        Knowledge Graph Builder
+
+          ┌──────────────┐
+          │ PostgreSQL   │
+          └──────────────┘
+
+                  │
+
+            Embeddings
+
+                  │
+
+             ChromaDB
+
+                  │
+
+        Retrieval (Semantic Search)
+
+                  │
+
+             Verse AI (RAG)
+
+                  │
+
+       Dashboard • Timeline
+      Career Brain • Search
+```
+
+---
+
+# 🛠 Tech Stack
+
+## Frontend
+
+- Next.js 15
+- React
+- TypeScript
+- Tailwind CSS
+- Shadcn UI
+
+---
+
+## Backend
+
+- FastAPI
+- SQLAlchemy
+- PostgreSQL
+- Pydantic
+
+---
+
+## AI & Machine Learning
+
+- Google Gemini API
+- Retrieval-Augmented Generation (RAG)
+- Knowledge Graph
+- NLP
+- Semantic Chunking
+- Vector Embeddings
+
+---
+
+## Vector Database
+
+- ChromaDB
+
+---
+
+## Authentication
+
+- Firebase Authentication
+- Google Sign-In
+
+---
+
+## Storage
+
+- Local Document Storage
+
+---
+
+# 📁 Project Structure
+
+```
+memoryverse-ai
+│
+├── frontend/
+│
+├── backend/
+│   ├── app/
+│   ├── api/
+│   ├── services/
+│   ├── models/
+│   ├── extraction/
+│   ├── search/
+│   ├── embeddings/
+│   └── db/
+│
+├── uploads/
+├── chromadb/
+└── sql/
+```
+
+---
+
+# ⚙ Installation
+
+## Backend
 
 ```bash
 cd backend
-python3 -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
+
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
 pip install -r requirements.txt
-cp .env.example .env           # edit DATABASE_URL to match your local Postgres
-uvicorn app.main:app --reload --port 8000
-```
 
-Runs at **http://localhost:8000**.
-Interactive API docs: **http://localhost:8000/docs**
-Health check: **http://localhost:8000/api/v1/health**
-
-Stack: FastAPI · SQLAlchemy (engine/session only, no models yet) ·
-Pydantic Settings for env config.
-
----
-
-## Project structure
-
-```
-memoryverse-ai/
-├── frontend/            # Next.js 15 app
-│   ├── app/              # App Router pages, layout, global styles
-│   ├── components/       # shadcn/ui components go here (empty for now)
-│   ├── lib/utils.ts      # cn() helper for shadcn
-│   └── components.json   # shadcn/ui config
-└── backend/              # FastAPI app
-    ├── app/
-    │   ├── main.py             # FastAPI app instance, CORS, router registration
-    │   ├── core/config.py      # Pydantic Settings — all env vars load here
-    │   ├── db/session.py       # SQLAlchemy engine/session (no models yet)
-    │   ├── api/v1/health.py    # /api/v1/health router
-    │   ├── models/             # empty — DB models land here (Sprint 2+)
-    │   ├── schemas/            # empty — Pydantic request/response schemas
-    │   ├── services/
-    │   │   └── storage/base.py # StorageService interface (abstract, no impl yet)
-    │   └── utils/               # empty — shared helpers
-    └── requirements.txt
+uvicorn app.main:app --reload
 ```
 
 ---
 
-## Verifying the setup
+## Frontend
 
-- Frontend: visit `http://localhost:3000` — should show the MemoryVerse AI
-  landing text.
-- Backend: `curl http://localhost:8000/api/v1/health` — should return
-  `{"status":"healthy"}`. (Note: the unversioned `/health` path from Sprint 1
-  no longer exists — it moved to `/api/v1/health` as part of introducing API
-  versioning.)
+```bash
+cd frontend
+
+npm install
+
+npm run dev
+```
 
 ---
 
-## Sprint 2 — Auth setup
+## Database
 
-Before `npm run dev` / `uvicorn` will actually let you sign in, you need a
-Firebase project:
+Create PostgreSQL database:
 
-1. Create a project at [console.firebase.google.com](https://console.firebase.google.com)
-2. **Authentication → Sign-in method → Google** → enable it
-3. **Project Settings → General → Your apps → Web app** → copy the config
-   values into `frontend/.env.local` (`NEXT_PUBLIC_FIREBASE_*`)
-4. **Project Settings → Service Accounts → Generate new private key** →
-   save the downloaded JSON as `backend/firebase-service-account.json`
-   (already gitignored)
-
-Without step 4, the backend still boots and `/health` still works — auth
-routes return a clear `503` instead of crashing, so you can develop other
-things without Firebase configured.
-
-**New backend route:** `POST /api/v1/auth/login` — verifies the Firebase
-ID token sent in `Authorization: Bearer <token>` and creates the user row
-in Postgres on first login.
-
-**New protected route:** `GET /api/v1/dashboard/stats` — requires the same
-Bearer token on every call (not just at login), returns hardcoded
-`{documents: 0, skills: 0, projects: 0, certificates: 0}` for now.
-
-**New pages:** `/` (landing), `/login` (custom Google sign-in), `/dashboard`
-(protected — redirects to `/login` if not signed in).
-
-## Sprint 3 — Document uploads
-
-**New backend routes** (all require `Authorization: Bearer <token>`, all
-scoped to the authenticated user — accessing someone else's document
-returns `404`, never `403`):
-- `POST /api/v1/documents/upload` — multipart file upload
-- `GET /api/v1/documents` — list your documents
-- `GET /api/v1/documents/{id}` — get one
-- `PATCH /api/v1/documents/{id}` — rename (`{"title": "..."}`)
-- `DELETE /api/v1/documents/{id}` — delete (removes both the DB row and the file)
-- `GET /api/v1/documents/{id}/download` — stream the original file back
-
-Allowed types: `pdf, doc, docx, txt, png, jpg, jpeg`, max 25 MB. Files are
-stored under `backend/uploads/` (configurable via `UPLOAD_DIR` in `.env`),
-named by a generated UUID — never the original filename, never exposed
-to the client.
-
-**New frontend:** the dashboard's Documents section now has a real
-drag-and-drop upload area (with per-file progress), a document list with
-file-type icons, status badges, rename/delete/download actions, and the
-same empty-state message from Sprint 2 (now shown only when you actually
-have zero documents).
-
-## Sprint 4 — Document processing
-
-**⚠️ Manual step required before running:** run
-`backend/sql/sprint4_manual_migration.sql` once against your existing
-Postgres database (adds `extracted_text`, `processed_at`,
-`processing_error` to `documents`). We're keeping `create_all()` instead
-of Alembic for now, and `create_all()` never alters existing tables —
-only creates missing ones.
-
-```powershell
-psql -U postgres -d memoryverse -f backend/sql/sprint4_manual_migration.sql
+```
+memoryverse
 ```
 
-**New backend route:** `POST /api/v1/documents/{id}/process` — starts
-text extraction as a FastAPI BackgroundTask. Returns immediately with
-`{"data": {"status": "PROCESSING"}}`; the actual extraction happens
-after the response is sent.
+Run required SQL migration scripts.
 
-**Status lifecycle:** `UPLOADED → PROCESSING → PROCESSED` or `FAILED`.
-`FAILED` documents can be retried (POST `/process` again); `PROCESSING`
-or `PROCESSED` documents reject a second trigger with `409`.
+---
 
-**Supported types:** PDF (PyMuPDF), DOCX (python-docx), TXT (stdlib).
-Legacy `.doc` uploads are accepted by Sprint 3 but have no processor
-registered — triggering `/process` on one fails gracefully to `FAILED`
-with a clear `processing_error`, not a crash.
+# 🔄 Workflow
 
-**Document detail/list responses** now include `processed_at`,
-`has_extracted_text` (boolean), and `processing_error` — the raw
-extracted text itself is never returned by any Sprint 4 endpoint.
-
-**Frontend:** each `UPLOADED`/`FAILED` document gets a "Process" action
-(sparkle icon); `PROCESSING` shows a spinner; the dashboard polls every
-3s while anything is processing so status updates show up without a
-manual refresh; `FAILED` documents show their error message inline.
-
-## Sprint 5 — Smart chunking engine
-
-**⚠️ Manual step required before running:** run
-`backend/sql/sprint5_manual_migration.sql` once against your Postgres
-database (creates `document_chunks`).
-
-```powershell
-psql -U postgres -d memoryverse -f backend/sql/sprint5_manual_migration.sql
+```
+Upload Document
+        │
+        ▼
+Document Processing
+        │
+        ▼
+Chunk Generation
+        │
+        ▼
+Gemini AI Extraction
+        │
+        ▼
+Knowledge Graph
+        │
+        ▼
+Embeddings
+        │
+        ▼
+ChromaDB
+        │
+        ▼
+Semantic Search
+        │
+        ▼
+Verse AI
 ```
 
-**New backend route:** `POST /api/v1/documents/{id}/chunk` — starts
-paragraph-aware chunking as a FastAPI BackgroundTask. Requires the
-document to already be `PROCESSED` with non-empty extracted text, and
-rejects a second trigger once chunks exist (`409` either way).
+---
 
-**Chunking is independent of processing** — it never runs
-automatically; it's only triggered by this endpoint. Target chunk size
-1000 chars (max 1200), 150-char overlap, paragraph → sentence →
-whitespace → forced-split priority. Chunk *content* is never returned
-by any API response — only metadata (offsets, character/token counts)
-is modeled, for future sprints.
+# 💡 AI Concepts Used
 
-No frontend changes this sprint — there's no UI requirement in the
-brief, and chunk content must stay server-side only.
+- Natural Language Processing (NLP)
+- Retrieval-Augmented Generation (RAG)
+- Knowledge Graph
+- Entity Extraction
+- Semantic Search
+- Vector Embeddings
+- Similarity Search
+- AI-powered Document Understanding
 
-## Sprint 6 — Career Brain knowledge extraction (Gemini)
+---
 
-**⚠️ Two manual steps before running:**
+# 📸 Screenshots
 
-1. Get a Gemini API key from [aistudio.google.com/apikey](https://aistudio.google.com/apikey), add to `backend/.env`:
-   ```
-   GEMINI_API_KEY=<your key>
-   GEMINI_MODEL=gemini-2.5-flash
-   ```
-2. Run `backend/sql/sprint6_manual_migration.sql` once against your Postgres database (adds `extraction_status`/`extraction_error`/`extracted_at` to `documents`). `knowledge_nodes`, `evidence_links`, and `knowledge_edges` are brand-new tables — `create_all()` creates them automatically, no manual SQL needed for those.
+Add screenshots of:
 
-```powershell
-psql -U postgres -d memoryverse -f backend/sql/sprint6_manual_migration.sql
-pip install -r backend/requirements.txt   # google-genai is new; pydantic bumped to 2.13.4
-```
+- Login Page
+- Dashboard
+- Upload Page
+- Career Brain
+- Timeline
+- Knowledge Graph
+- Semantic Search
+- Verse AI
 
-**New backend routes:**
-- `POST /api/v1/documents/{id}/extract` — starts Gemini extraction as a BackgroundTask. Requires the document to be `PROCESSED` with existing chunks (`/chunk` run first); rejects a second trigger while `EXTRACTING`/`EXTRACTED` (`409`), retryable from `FAILED`.
-- `GET /api/v1/documents/{id}/knowledge` — metadata-only view of extracted entities (`knowledge_nodes`) and relationships (`knowledge_edges`) for a document. Never returns evidence excerpts or raw Gemini output.
+---
 
-**Hybrid extraction:** documents chunk into groups of 5 for Gemini calls — a document with ≤5 chunks becomes one call; larger documents become multiple calls. Known limitation: relationships between entities in *different* batches aren't detected, only within a batch.
+# 🚀 Future Improvements
 
-**Every entity is independently verified** before storage: its `evidence_quote` must actually appear in the source chunk text, or it's discarded (never trust Gemini's output blindly). Same for relationships — both endpoints must be in that batch's successfully-stored entities, or the relationship is discarded.
+- Cloud Deployment
+- Resume Generation
+- Interview Preparation
+- Skill Gap Analysis
+- Learning Recommendations
+- Multi-language Support
+- OCR for Scanned Documents
+- Real-time Collaboration
 
-No frontend changes this sprint (backend-only, matching Sprint 5's precedent — nothing in the brief asked for a UI).
+---
 
-## Sprint 7 Part 1 — Vector storage infrastructure
+# 👩‍💻 Developed By
 
-Infrastructure only — no new dependency, no routes, no callers yet.
-`ChromaDB` is now installed and a `career_brain` collection is created
-automatically at backend startup (persisted under `backend/chromadb/`,
-configurable via `CHROMA_DB_PATH` in `.env`). Nothing in the app calls
-it yet — `EmbeddingService` and `SearchService` don't exist until a
-future sprint.
+**Misba Saiyed**
 
-**New:** `app/embeddings/vector_store.py` (abstract `VectorStore`
-interface — `create_collection`, `upsert`, `query`, `delete`,
-`delete_document`, `health_check`), `app/embeddings/chroma_vector_store.py`
-(the Chroma implementation). Same interface-first pattern as
-`StorageService`/`LocalStorageService` from Sprint 3.
+GitHub:
+https://github.com/misbahsaiyed20
 
-The vector store instance lives on `app.state.vector_store` (set at
-startup), not a module-level singleton — check there if a future sprint
-needs to depend on it.
+---
 
-## Sprint 7 Part 2 — Embedding service
+# 🙏 Acknowledgements
 
-Still no routes, no frontend, no search/RAG/chat — service + provider
-only, matching Part 1's infrastructure-first scope.
+- Google Gemini AI
+- ChromaDB
+- FastAPI
+- Next.js
+- PostgreSQL
+- Firebase Authentication
+- MemoryVerse AI '26 Hackathon
 
-**New:** `app/embeddings/embedding_provider.py` (abstract
-`EmbeddingProvider` — `embed_text`, `embed_batch`),
-`app/embeddings/gemini_embedding_provider.py` (Gemini `text-embedding-004`
-implementation, same retry/backoff pattern as `gemini_client.py`),
-`app/services/embedding_service.py` (`EmbeddingService.embed_document()`
-— loads a document's chunks from Postgres, embeds them in batches,
-stores via the `VectorStore` from Part 1).
+---
 
-Vector IDs are `chunk_<chunk_uuid>` (stable — re-running embed_document
-on the same document overwrites rather than duplicates). Metadata
-stored per vector: `document_id`, `chunk_id`, `filename`, `mime_type`,
-`chunk_index`. **`page` is requested but not actually available** —
-chunking (Sprint 5) has no page-boundary tracking, and ChromaDB itself
-silently drops metadata keys with a `None` value rather than storing
-them (verified directly) — so `page` won't appear on stored records
-until a future sprint adds real page tracking through the pipeline.
+# 📜 License
 
-If a whole batch's embedding call fails, `EmbeddingService` falls back
-to embedding that batch one chunk at a time, so a single bad chunk
-never costs the rest of the batch — logged, not fatal, matching the
-"continue on individual chunk failure" requirement.
-
-## Sprint 7 Part 3 — Embedding pipeline integration
-
-Wires Part 2's `EmbeddingService` into the existing chunking flow — no
-new routes, no schema changes, no rewrite of any embedding code.
-
-**Architecture note:** there's no `process_document() → extract() →
-chunk()` linear function in this codebase — processing, chunking, and
-extraction are each independently triggered (`/process`, `/chunk`,
-`/extract`), by design since Sprint 5. Embedding hooks into the
-existing **chunking** background task (`ChunkingService.generate_and_store()`,
-right after chunks are committed) — the correct integration point per
-the intended pipeline shape (`... → Chunk → Generate Embeddings →
-Store`), just via the independent-trigger architecture already in
-place rather than a chain that doesn't exist.
-
-**Modified:** `app/services/chunking_service.py` (+`_trigger_embedding()`,
-called at the end of a successful chunking run), `app/api/deps.py`
-(+`get_vector_store()` — a lazy singleton factory, following the exact
-same pattern as `get_storage_service()`; needed because chunking's
-background task has no access to `app.state.vector_store`, which is
-only reachable from request/startup context).
-
-**Embedding failures never fail chunking** — `_trigger_embedding()`
-catches everything internally and only logs a warning; the `/chunk`
-endpoint's response and the document's chunking result are completely
-unaffected by a Gemini outage or any other embedding failure.
-
-## Sprint 8 Part 1 — Semantic retrieval infrastructure
-
-Pure retrieval only — no AI-generated answers, no chat, no RAG, no
-routes, no frontend.
-
-**New:** `app/services/search_service.py` — `SearchService.search(query,
-top_k=5)`: embeds the query, calls `VectorStore.query()`, returns
-matching chunks (`chunk_id`, `document_id`, `filename`, `chunk_index`,
-`distance`, `text`, full `metadata`). Both dependencies
-(`EmbeddingProvider`, `VectorStore`) are constructor-injected — never
-instantiates Chroma or Gemini directly.
-
-**Two small, additive changes to existing files** (nothing's behavior
-changed for existing callers):
-- `EmbeddingProvider` interface gained a new abstract method,
-  `embed_query()` — distinct from `embed_text()`/`embed_batch()`, which
-  keep embedding for *indexing*. `GeminiEmbeddingProvider` implements it
-  using Gemini's `RETRIEVAL_QUERY` task type instead of
-  `RETRIEVAL_DOCUMENT` (asymmetric embedding improves retrieval
-  quality). `embed_text()`/`embed_batch()` are unchanged.
-- `GeminiEmbeddingProvider` internally refactored to share retry logic
-  between the three methods — no external behavior change.
-
-**Known limitation, not fixed:** `distance` is Chroma's raw (unbounded,
-un-normalized) squared-L2 distance — the `career_brain` collection has
-no explicit distance metric configured (Sprint 7 Part 1 left it at
-Chroma's default). Converting this into a bounded 0–1 similarity score
-would require recreating the collection with `cosine` explicitly
-configured, which would orphan every embedding already stored by
-Sprint 7 — out of scope here. Lower `distance` = more similar either way.
-
-## Known items / notes
-
-- `npm audit` reports one moderate advisory nested inside Next.js's own
-  `postcss` dependency. It only resolves by force-downgrading Next to v9, so
-  it's left as-is for now — track for a future Next.js patch release.
-- `DATABASE_URL` in `.env.example` uses local defaults
-  (`postgres:postgres@localhost:5432/memoryverse`). The backend boots fine
-  without a live Postgres connection since Sprint 1 has no models or queries
-  that touch the DB yet — you'll only need Postgres running once Sprint 2
-  adds models + Alembic migrations.
+This project was developed for educational and hackathon purposes.

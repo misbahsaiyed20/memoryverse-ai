@@ -1,35 +1,52 @@
 """
-Extraction service — Sprint 8 Part 5: Career Brain foundation.
+Extraction service — Sprint 8 Part 5 (nodes) + Part 6 (edges): Career
+Brain foundation and graph completion.
 
 Turns a document's already-generated chunks into persisted KnowledgeNode
-rows, using the Gemini extraction machinery that already existed
-(app.extraction.gemini_client.extract_from_text, prompt_builder,
-extraction_schema) but had no service or route calling it before this
-sprint.
-
-Deliberately entities-only: GeminiExtractionResult also returns
-relationships, but this service reads and discards them — relationship/
-edge persistence is out of scope until nodes exist to connect (see
-Sprint 8 Part 5 task notes).
+and KnowledgeEdge rows, using the Gemini extraction machinery that
+already existed (app.extraction.gemini_client.extract_from_text,
+prompt_builder, extraction_schema) but had no service or route calling
+it before Part 5.
 
 Same validate_*()/run() two-entry-point naming as ChunkingService and
 DocumentProcessingService, but run() is NOT dispatched through
 BackgroundTasks/task_runner.py the way theirs are. Those services return
 "started" immediately because nothing in their response depends on the
-work finishing. This one has to report a real nodes_created count, which
-only exists once extraction is done — so run() executes synchronously,
-inline in the request, sharing the same request-scoped session as
-validate_for_extraction(). If a future sprint needs this backgrounded
-(e.g. large documents making requests time out), that's a route/
-task_runner change, not a change to this class's logic.
+work finishing. This one has to report real nodes_created/edges_created
+counts, which only exist once extraction is done — so run() executes
+synchronously, inline in the request, sharing the same request-scoped
+session as validate_for_extraction(). If a future sprint needs this
+backgrounded (e.g. large documents making requests time out), that's a
+route/task_runner change, not a change to this class's logic.
 
 Never touches ChromaDB, embeddings, or SearchService — this class's
 entire job is Postgres in (chunks), Gemini in the middle, Postgres out
-(knowledge nodes).
+(knowledge nodes + edges).
+
+Edge verification is inherently weaker than node verification, and that
+gap isn't something this file can close: GeminiRelationship has no
+evidence_quote field (see extraction_schema.py), so there's no source
+text to check a relationship against. What IS verified: both endpoints
+must be entities that this same batch call actually extracted and that
+independently passed evidence-quote verification as KnowledgeNode rows
+— a relationship pointing at a name Gemini didn't actually return, or
+at an entity that got discarded for failing its own verification, is
+dropped.
+
+Known limitation, inherent to the per-batch design (not introduced
+here): a relationship can only be detected between two entities Gemini
+saw in the *same* 5-chunk batch call. A skill mentioned in batch 1 and
+a project mentioned in batch 4 will never get an edge between them,
+even if the source document clearly relates them — Gemini has no memory
+across batches. Closing that gap would mean resolving entity names
+against the whole document (or the whole user's graph) rather than just
+the current batch, which is a bigger design change than "finish the
+graph" — flagging it rather than quietly leaving it undiscoverable.
 """
 
 import logging
 import uuid
+from typing import NamedTuple
 
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
@@ -37,6 +54,7 @@ from sqlalchemy.orm import Session
 from app.extraction.gemini_client import ExtractionError, extract_from_text
 from app.models.document import Document, DocumentStatus
 from app.models.document_chunk import DocumentChunk
+from app.models.knowledge_edge import KnowledgeEdge
 from app.models.knowledge_node import EntityType, KnowledgeNode
 
 logger = logging.getLogger(__name__)
@@ -45,6 +63,18 @@ logger = logging.getLogger(__name__)
 # section ("documents chunk into groups of 5 for Gemini calls") — not
 # reimplementing a different scheme, just finally giving it a home.
 BATCH_SIZE = 5
+
+
+class ExtractionSummary(NamedTuple):
+    nodes_created: int
+    edges_created: int
+
+
+class _BatchResult(NamedTuple):
+    nodes_created: int
+    nodes_discarded: int
+    edges_created: int
+    edges_discarded: int
 
 
 class ExtractionService:
@@ -89,15 +119,17 @@ class ExtractionService:
 
         return document
 
-    def run(self, document: Document) -> int:
+    def run(self, document: Document) -> ExtractionSummary:
         """Batches this document's chunks, calls Gemini extraction per
         batch, verifies each entity's evidence_quote against the actual
-        chunk text, and persists verified entities as KnowledgeNode rows.
+        chunk text, persists verified entities as KnowledgeNode rows,
+        then persists relationships between them (within the same
+        batch) as KnowledgeEdge rows.
 
-        Returns the number of nodes created. Never raises for a single
-        batch's Gemini failure — logs it and continues with the next
-        batch, same "one failure doesn't sacrifice the rest" discipline
-        as EmbeddingService._embed_and_store_batch().
+        Never raises for a single batch's Gemini failure — logs it and
+        continues with the next batch, same "one failure doesn't
+        sacrifice the rest" discipline as
+        EmbeddingService._embed_and_store_batch().
         """
         chunks = (
             self.db.query(DocumentChunk)
@@ -107,7 +139,7 @@ class ExtractionService:
         )
         if not chunks:
             logger.warning("Extraction skipped: document_id=%s has no chunks", document.id)
-            return 0
+            return ExtractionSummary(nodes_created=0, edges_created=0)
 
         logger.info(
             "Extraction started for document_id=%s, chunk_count=%d, batch_size=%d",
@@ -116,26 +148,36 @@ class ExtractionService:
 
         nodes_created = 0
         nodes_discarded = 0
+        edges_created = 0
+        edges_discarded = 0
         batches_failed = 0
 
         for batch_start in range(0, len(chunks), BATCH_SIZE):
             batch = chunks[batch_start : batch_start + BATCH_SIZE]
-            created, discarded = self._extract_and_store_batch(document, batch)
-            nodes_created += created
-            nodes_discarded += discarded
-            if created == 0 and discarded == 0:
+            result = self._extract_and_store_batch(document, batch)
+            if result is None:
+                # The Gemini call itself failed for this batch — distinct
+                # from a batch that succeeded but had nothing extractable
+                # (that's a legitimate 0/0/0/0 result, not a failure).
                 batches_failed += 1
+                continue
+            nodes_created += result.nodes_created
+            nodes_discarded += result.nodes_discarded
+            edges_created += result.edges_created
+            edges_discarded += result.edges_discarded
 
         logger.info(
             "Extraction completed for document_id=%s: nodes_created=%d, "
-            "nodes_discarded=%d, batches_failed=%d",
-            document.id, nodes_created, nodes_discarded, batches_failed,
+            "nodes_discarded=%d, edges_created=%d, edges_discarded=%d, "
+            "batches_failed=%d",
+            document.id, nodes_created, nodes_discarded,
+            edges_created, edges_discarded, batches_failed,
         )
-        return nodes_created
+        return ExtractionSummary(nodes_created=nodes_created, edges_created=edges_created)
 
     def _extract_and_store_batch(
         self, document: Document, batch: list[DocumentChunk]
-    ) -> tuple[int, int]:
+    ) -> _BatchResult | None:
         batch_text = "\n\n".join(chunk.content for chunk in batch)
 
         try:
@@ -146,18 +188,16 @@ class ExtractionService:
                 "skipping this batch: %s",
                 document.id, batch[0].chunk_index, batch[-1].chunk_index, exc,
             )
-            return 0, 0
+            return None
 
-        # Relationships are intentionally read and discarded — entity/edge
-        # persistence is a later sprint (see module docstring).
         logger.info(
-            "Batch extracted for document_id=%s: entities=%d, relationships_ignored=%d",
+            "Batch extracted for document_id=%s: entities=%d, relationships=%d",
             document.id, len(result.entities), len(result.relationships),
         )
 
-        created = 0
-        discarded = 0
         node_rows: list[KnowledgeNode] = []
+        nodes_by_name: dict[str, KnowledgeNode] = {}
+        nodes_discarded = 0
 
         for entity in result.entities:
             matched_chunk = self._find_source_chunk(entity.evidence_quote, batch)
@@ -172,35 +212,74 @@ class ExtractionService:
                     "type=%s (evidence_quote not found verbatim in source chunks)",
                     document.id, entity.name, entity.node_type,
                 )
-                discarded += 1
+                nodes_discarded += 1
                 continue
 
-            node_rows.append(
-                KnowledgeNode(
+            node = KnowledgeNode(
+                user_id=document.user_id,
+                document_chunk_id=matched_chunk.id,
+                entity_type=EntityType(entity.node_type),
+                name=entity.name,
+                description=entity.description,
+                confidence=entity.confidence,
+                evidence_quote=entity.evidence_quote,
+            )
+            node_rows.append(node)
+            # First-match wins if the same entity name appears twice in
+            # one batch — a known, accepted limitation, not a crash risk.
+            nodes_by_name.setdefault(entity.name, node)
+
+        edge_rows: list[KnowledgeEdge] = []
+        edges_discarded = 0
+
+        for relationship in result.relationships:
+            source_node = nodes_by_name.get(relationship.source_entity_name)
+            target_node = nodes_by_name.get(relationship.target_entity_name)
+            if source_node is None or target_node is None or source_node is target_node:
+                # Relationship points at an entity name Gemini didn't
+                # actually return this batch, or one that was discarded
+                # above for failing its own evidence check, or names the
+                # same entity on both ends. Discarded, not stored with a
+                # dangling or self-referential edge.
+                logger.warning(
+                    "Discarding unverified relationship for document_id=%s: "
+                    "%r -> %r (type=%s)",
+                    document.id, relationship.source_entity_name,
+                    relationship.target_entity_name, relationship.relationship_type,
+                )
+                edges_discarded += 1
+                continue
+
+            edge_rows.append(
+                KnowledgeEdge(
                     user_id=document.user_id,
-                    document_chunk_id=matched_chunk.id,
-                    entity_type=EntityType(entity.node_type),
-                    name=entity.name,
-                    description=entity.description,
-                    confidence=entity.confidence,
-                    evidence_quote=entity.evidence_quote,
+                    source_node_id=source_node.id,
+                    target_node_id=target_node.id,
+                    relationship_type=relationship.relationship_type,
+                    description=relationship.description,
+                    confidence=relationship.confidence,
                 )
             )
-            created += 1
 
-        if node_rows:
+        if node_rows or edge_rows:
             try:
-                self.db.add_all(node_rows)
+                # Single commit for both — SQLAlchemy's unit-of-work sorts
+                # inserts by the FK constraints declared on the mapped
+                # columns, so knowledge_nodes rows are guaranteed to be
+                # inserted before the knowledge_edges rows referencing
+                # them, even though both are queued in the same add_all().
+                self.db.add_all(node_rows + edge_rows)
                 self.db.commit()
             except Exception as exc:
                 self.db.rollback()
                 logger.error(
-                    "Failed to store %d knowledge node(s) for document_id=%s: %s",
-                    len(node_rows), document.id, exc, exc_info=True,
+                    "Failed to store %d knowledge node(s) and %d edge(s) for "
+                    "document_id=%s: %s",
+                    len(node_rows), len(edge_rows), document.id, exc, exc_info=True,
                 )
-                return 0, discarded
+                return _BatchResult(0, nodes_discarded, 0, edges_discarded)
 
-        return created, discarded
+        return _BatchResult(len(node_rows), nodes_discarded, len(edge_rows), edges_discarded)
 
     @staticmethod
     def _find_source_chunk(
