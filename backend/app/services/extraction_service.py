@@ -229,6 +229,29 @@ class ExtractionService:
             # one batch — a known, accepted limitation, not a crash risk.
             nodes_by_name.setdefault(entity.name, node)
 
+        # Flush (not commit) node_rows now, before any edge references
+        # node.id. KnowledgeNode.id's default (uuid.uuid4) is a
+        # SQLAlchemy Python-side default — it's only resolved and
+        # assigned onto the instance when the object is actually
+        # flushed, not the moment KnowledgeNode(...) is constructed. Read
+        # node.id before this point and every edge gets source_node_id=
+        # NULL, which the DB then rejects — the whole batch's nodes
+        # rolling back too, since the constraint violation happens
+        # inside the same still-open transaction. Flushing here keeps
+        # everything in one transaction (still rolled back together on
+        # a later failure) while making the ids real before they're read.
+        if node_rows:
+            try:
+                self.db.add_all(node_rows)
+                self.db.flush()
+            except Exception as exc:
+                self.db.rollback()
+                logger.error(
+                    "Failed to flush %d knowledge node(s) for document_id=%s: %s",
+                    len(node_rows), document.id, exc, exc_info=True,
+                )
+                return _BatchResult(0, nodes_discarded, 0, len(result.relationships))
+
         edge_rows: list[KnowledgeEdge] = []
         edges_discarded = 0
 
@@ -263,12 +286,11 @@ class ExtractionService:
 
         if node_rows or edge_rows:
             try:
-                # Single commit for both — SQLAlchemy's unit-of-work sorts
-                # inserts by the FK constraints declared on the mapped
-                # columns, so knowledge_nodes rows are guaranteed to be
-                # inserted before the knowledge_edges rows referencing
-                # them, even though both are queued in the same add_all().
-                self.db.add_all(node_rows + edge_rows)
+                # node_rows were already added+flushed above (that's what
+                # made their ids real for the edges above); only edge_rows
+                # still need adding. Both remain in the same transaction,
+                # so a failure here still rolls back the nodes too.
+                self.db.add_all(edge_rows)
                 self.db.commit()
             except Exception as exc:
                 self.db.rollback()

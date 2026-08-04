@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Download, Loader2, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { Brain, Download, Loader2, Pencil, Scissors, Sparkles, Trash2 } from "lucide-react";
 
 import { downloadDocument, type DocumentItem } from "@/lib/documents-api";
 import { DocumentFileIcon } from "@/components/documents/file-icon";
@@ -14,6 +14,8 @@ interface DocumentListProps {
   onRename: (id: string, title: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
   onProcess: (id: string) => Promise<void>;
+  onChunk: (id: string) => Promise<void>;
+  onExtract: (id: string) => Promise<{ nodes_created: number; edges_created: number }>;
 }
 
 function formatFileSize(bytes: number): string {
@@ -26,11 +28,17 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
 }
 
-export function DocumentList({ documents, onRename, onDelete, onProcess }: DocumentListProps) {
+export function DocumentList({ documents, onRename, onDelete, onProcess, onChunk, onExtract }: DocumentListProps) {
   const [renaming, setRenaming] = useState<DocumentItem | null>(null);
   const [deleting, setDeleting] = useState<DocumentItem | null>(null);
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const [chunkingIds, setChunkingIds] = useState<Set<string>>(new Set());
+  const [extractingIds, setExtractingIds] = useState<Set<string>>(new Set());
+  // Per-document status line for chunk/extract results and errors — these
+  // two actions have no status field on Document to reflect, unlike
+  // process, so feedback has to live here instead of in a StatusBadge.
+  const [actionMessages, setActionMessages] = useState<Record<string, { text: string; isError: boolean }>>({});
 
   async function handleDownload(doc: DocumentItem) {
     setDownloadError(null);
@@ -54,6 +62,54 @@ export function DocumentList({ documents, onRename, onDelete, onProcess }: Docum
     }
   }
 
+  async function handleChunk(doc: DocumentItem) {
+    setChunkingIds((prev) => new Set(prev).add(doc.id));
+    setActionMessages((prev) => { const next = { ...prev }; delete next[doc.id]; return next; });
+    try {
+      await onChunk(doc.id);
+      setActionMessages((prev) => ({ ...prev, [doc.id]: { text: "Chunking started.", isError: false } }));
+    } catch (err) {
+      setActionMessages((prev) => ({
+        ...prev,
+        [doc.id]: { text: err instanceof Error ? err.message : "Chunking failed.", isError: true },
+      }));
+    } finally {
+      setChunkingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(doc.id);
+        return next;
+      });
+    }
+  }
+
+  async function handleExtract(doc: DocumentItem) {
+    setExtractingIds((prev) => new Set(prev).add(doc.id));
+    setActionMessages((prev) => { const next = { ...prev }; delete next[doc.id]; return next; });
+    try {
+      // Synchronous on the backend — can take a while (one Gemini call per
+      // 5 chunks). The spinner stays until this actually resolves.
+      const result = await onExtract(doc.id);
+      setActionMessages((prev) => ({
+        ...prev,
+        [doc.id]: {
+          text: `Extracted ${result.nodes_created} knowledge node${result.nodes_created === 1 ? "" : "s"}, ${result.edges_created} relationship${result.edges_created === 1 ? "" : "s"}.`,
+          isError: false,
+        },
+      }));
+    } catch (err) {
+      setActionMessages((prev) => ({
+        ...prev,
+        [doc.id]: { text: err instanceof Error ? err.message : "Extraction failed.", isError: true },
+      }));
+    } finally {
+      setExtractingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(doc.id);
+        return next;
+      });
+    }
+  }
+
   return (
     <div className="mt-6">
       {downloadError && (
@@ -66,6 +122,17 @@ export function DocumentList({ documents, onRename, onDelete, onProcess }: Docum
           const canProcess = doc.status === "UPLOADED" || doc.status === "FAILED";
           const isProcessing = doc.status === "PROCESSING";
           const isTriggering = processingIds.has(doc.id);
+          // Chunk/Extract both require PROCESSED — the backend enforces this
+          // itself (409 otherwise), this just avoids showing a button that
+          // would immediately fail. There's no has_chunks/has_extracted flag
+          // on DocumentItem, so a document that's already been chunked or
+          // extracted still shows the button; clicking it again surfaces the
+          // backend's own "already chunked/extracted" message below instead
+          // of silently doing nothing.
+          const canChunkOrExtract = doc.status === "PROCESSED";
+          const isChunking = chunkingIds.has(doc.id);
+          const isExtracting = extractingIds.has(doc.id);
+          const message = actionMessages[doc.id];
 
           return (
             <div key={doc.id} className="px-5 py-4">
@@ -96,6 +163,28 @@ export function DocumentList({ documents, onRename, onDelete, onProcess }: Docum
                       </button>
                     )
                   )}
+                  {canChunkOrExtract && (
+                    <button
+                      onClick={() => handleChunk(doc)}
+                      disabled={isChunking}
+                      className="rounded-full p-2 text-muted transition-colors hover:bg-accent-soft hover:text-accent disabled:opacity-50"
+                      title="Chunk"
+                      aria-label={`Chunk ${doc.title}`}
+                    >
+                      {isChunking ? <Loader2 size={16} className="animate-spin" /> : <Scissors size={16} />}
+                    </button>
+                  )}
+                  {canChunkOrExtract && (
+                    <button
+                      onClick={() => handleExtract(doc)}
+                      disabled={isExtracting}
+                      className="rounded-full p-2 text-muted transition-colors hover:bg-accent-soft hover:text-accent disabled:opacity-50"
+                      title="Extract knowledge"
+                      aria-label={`Extract knowledge from ${doc.title}`}
+                    >
+                      {isExtracting ? <Loader2 size={16} className="animate-spin" /> : <Brain size={16} />}
+                    </button>
+                  )}
                   <button
                     onClick={() => handleDownload(doc)}
                     className="rounded-full p-2 text-muted transition-colors hover:bg-accent-soft hover:text-accent"
@@ -124,6 +213,11 @@ export function DocumentList({ documents, onRename, onDelete, onProcess }: Docum
               </div>
               {doc.status === "FAILED" && doc.processing_error && (
                 <p className="mt-2 pl-9 text-xs text-red-600">{doc.processing_error}</p>
+              )}
+              {message && (
+                <p className={`mt-2 pl-9 text-xs ${message.isError ? "text-red-600" : "text-emerald-700"}`}>
+                  {message.text}
+                </p>
               )}
             </div>
           );

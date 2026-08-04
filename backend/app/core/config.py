@@ -34,6 +34,16 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash"
 
+    # Vertex AI mode — alternative auth path for accounts stuck with
+    # AQ.-prefixed API keys that the Generative Language API rejects
+    # (see gemini_client.py's _get_client()). Uses a GCP service account
+    # or `gcloud auth application-default login`, not gemini_api_key, so
+    # it needs its own project/location. Off by default — existing
+    # deployments with a working API key are unaffected.
+    gemini_use_vertexai: bool = False
+    gcp_project: str = ""
+    gcp_location: str = "us-central1"
+
     # Vector storage (Sprint 7) — persistent local ChromaDB path.
     chroma_db_path: str = "./chromadb"
 

@@ -71,6 +71,23 @@ export async function processDocument(id: string): Promise<{ status: DocumentIte
   return body.data;
 }
 
+export async function chunkDocument(id: string): Promise<{ chunking_status: string }> {
+  const res = await apiFetch(`/api/v1/documents/${id}/chunk`, { method: "POST" });
+  if (!res.ok) throw new Error(await extractErrorMessage(res, "Failed to start chunking."));
+  const body: ApiEnvelope<{ document_id: string; chunking_status: string }> = await res.json();
+  return body.data;
+}
+
+export async function extractDocument(id: string): Promise<{ nodes_created: number; edges_created: number }> {
+  // Runs synchronously — this can take a while (one Gemini call per 5
+  // chunks), unlike process/chunk which return immediately. See
+  // ExtractionService's own docstring for why it isn't backgrounded.
+  const res = await apiFetch(`/api/v1/documents/${id}/extract`, { method: "POST" });
+  if (!res.ok) throw new Error(await extractErrorMessage(res, "Failed to extract knowledge."));
+  const body: ApiEnvelope<{ nodes_created: number; edges_created: number }> = await res.json();
+  return body.data;
+}
+
 export async function downloadDocument(id: string, filename: string): Promise<void> {
   const user = getFirebaseAuth().currentUser;
   if (!user) throw new Error("Not authenticated.");

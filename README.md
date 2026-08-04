@@ -303,6 +303,47 @@ This project addresses the core challenge of creating an AI-powered Digital Iden
 * Personalized professional recommendations
 
 ---
+# 📸 Application Screenshots
+
+## Dashboard
+
+![Dashboard](docs/images/dashboard.png)
+
+---
+
+## Upload Documents
+
+![Upload](docs/upload.png)
+
+---
+
+## Knowledge Graph
+
+![Knowledge Graph](docs/knowledge_graph.png)
+
+---
+
+## Career Timeline
+
+![Timeline](docs/timeline.png)
+
+---
+
+## memoryverse ai login
+
+![login](docs/login.png)
+
+---
+
+## Career Brain
+
+![Career Brain](docs/career_brain.png)
+
+---
+
+## backend APIs
+
+![Backend APIs](docs/apis.png)
 
 # 👩‍💻 Built For
 

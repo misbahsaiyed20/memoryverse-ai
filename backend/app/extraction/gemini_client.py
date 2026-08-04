@@ -113,30 +113,49 @@ _client: "genai.Client | None" = None
 def _get_client() -> "genai.Client":
     global _client
     if _client is None:
-        print("BACKEND API KEY PREFIX:", settings.gemini_api_key[:10])
-        print("BACKEND MODEL:", settings.gemini_model)
-
-        if not settings.gemini_api_key:
-            raise ExtractionError(
-                "GEMINI_API_KEY is not configured. Set it in your .env file."
+        if settings.gemini_use_vertexai:
+            if not settings.gcp_project:
+                raise ExtractionError(
+                    "GEMINI_USE_VERTEXAI is set but GCP_PROJECT is not configured. "
+                    "Set it in your .env file."
+                )
+            # Uses Application Default Credentials (gcloud auth
+            # application-default login, or GOOGLE_APPLICATION_CREDENTIALS
+            # pointing to a service account JSON) — no API key involved,
+            # which is the whole point: this path exists for accounts
+            # whose AQ.-prefixed keys are rejected by the Generative
+            # Language API.
+            _client = genai.Client(
+                vertexai=True,
+                project=settings.gcp_project,
+                location=settings.gcp_location,
             )
-        _client = genai.Client(api_key=settings.gemini_api_key)
+        else:
+            if not settings.gemini_api_key:
+                raise ExtractionError(
+                    "GEMINI_API_KEY is not configured. Set it in your .env file."
+                )
+            _client = genai.Client(api_key=settings.gemini_api_key)
     return _client
 
 
 def _decode_attributes(parsed_json: dict) -> dict:
     """Gemini returns `attributes` as a JSON-encoded string per the
-    schema above — decode it back into a dict (or None) in place before
-    Pydantic validation."""
+    schema above — decode it back into a list in place before Pydantic
+    validation. Always ends up as a list, never None: GeminiEntity.
+    attributes is typed `list[GeminiAttribute]` with no `| None`, so a
+    missing/unparseable string must become [], not None — None fails
+    validation instead of being treated as "no attributes"."""
     for entity in parsed_json.get("entities", []):
         raw_attrs = entity.get("attributes")
         if isinstance(raw_attrs, str) and raw_attrs.strip():
             try:
-                entity["attributes"] = json.loads(raw_attrs)
+                decoded = json.loads(raw_attrs)
+                entity["attributes"] = decoded if isinstance(decoded, list) else []
             except json.JSONDecodeError:
-                entity["attributes"] = None
+                entity["attributes"] = []
         else:
-            entity["attributes"] = None
+            entity["attributes"] = []
     return parsed_json
 
 
@@ -257,6 +276,7 @@ def generate_json(prompt: str, response_json_schema: dict, model_cls: type) -> o
     raise GeminiGenerationError(
         f"Gemini JSON generation failed after {MAX_ATTEMPTS} attempts: {last_error}"
     ) from last_error
+
 
 def generate_text(prompt: str) -> str:
     """Calls Gemini for a free-text (non-JSON) response and returns the

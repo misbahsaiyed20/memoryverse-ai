@@ -5,25 +5,39 @@
 -- reported symptom is "column knowledge_nodes.document_chunk_id does not
 -- exist" despite the model/migration source files defining it correctly.
 --
--- Safe to run: only drops these two tables if BOTH are confirmed empty.
--- If either has rows, it aborts and does nothing — re-run
+-- Safe to run: only drops these tables if all three are confirmed empty.
+-- If any has rows, it aborts and does nothing — re-run
 -- sprint8_part5/6_manual_migration.sql by hand in that case instead.
 
+-- evidence_links: not defined by any SQLAlchemy model or service in this
+-- codebase (confirmed via full-project grep) — leftover from an earlier,
+-- abandoned attempt, not part of the current architecture. Its FK to
+-- knowledge_nodes is what blocked the original repair attempt. Dropped
+-- here rather than recreated, since nothing reads or writes it.
 DO $$
 DECLARE
-    node_count INTEGER;
-    edge_count INTEGER;
+    node_count INTEGER := 0;
+    edge_count INTEGER := 0;
+    link_count INTEGER := 0;
 BEGIN
-    SELECT count(*) INTO node_count FROM knowledge_nodes;
-    SELECT count(*) INTO edge_count FROM knowledge_edges;
+    IF to_regclass('knowledge_nodes') IS NOT NULL THEN
+        SELECT count(*) INTO node_count FROM knowledge_nodes;
+    END IF;
+    IF to_regclass('knowledge_edges') IS NOT NULL THEN
+        SELECT count(*) INTO edge_count FROM knowledge_edges;
+    END IF;
+    IF to_regclass('evidence_links') IS NOT NULL THEN
+        SELECT count(*) INTO link_count FROM evidence_links;
+    END IF;
 
-    IF node_count > 0 OR edge_count > 0 THEN
+    IF node_count > 0 OR edge_count > 0 OR link_count > 0 THEN
         RAISE EXCEPTION
-            'knowledge_nodes has % row(s), knowledge_edges has % row(s) — refusing to drop non-empty tables. Fix the schema manually instead.',
-            node_count, edge_count;
+            'knowledge_nodes has % row(s), knowledge_edges has % row(s), evidence_links has % row(s) — refusing to drop non-empty tables. Fix the schema manually instead.',
+            node_count, edge_count, link_count;
     END IF;
 END $$;
 
+DROP TABLE IF EXISTS evidence_links;
 DROP TABLE IF EXISTS knowledge_edges;
 DROP TABLE IF EXISTS knowledge_nodes;
 DROP TYPE IF EXISTS knowledge_node_entity_type;

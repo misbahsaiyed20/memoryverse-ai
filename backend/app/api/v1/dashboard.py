@@ -36,7 +36,7 @@ def get_stats(
         "recent_documents": [
             {
                 "id": str(doc.id),
-                "filename": doc.filename,
+                "filename": doc.title,
                 "status": doc.status.value,
                 "created_at": doc.created_at.isoformat(),
             }

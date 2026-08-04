@@ -91,7 +91,7 @@ class CareerBrainService:
             timeline.append(
                 {
                     "document_id": str(document.id),
-                    "filename": document.filename,
+                    "filename": document.title,
                     "created_at": document.created_at.isoformat(),
                     "nodes": [self._serialize(node, chunk, document) for node, chunk in results],
                 }
@@ -122,6 +122,6 @@ class CareerBrainService:
             "confidence": node.confidence,
             "evidence_quote": node.evidence_quote,
             "document_id": str(document.id),
-            "filename": document.filename,
+            "filename": document.title,
             "chunk_id": str(chunk.id),
         }

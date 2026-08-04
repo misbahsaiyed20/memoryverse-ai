@@ -44,11 +44,23 @@ class EmbeddingError(Exception):
 
 class GeminiEmbeddingProvider(EmbeddingProvider):
     def __init__(self, model: str = DEFAULT_MODEL) -> None:
-        if not settings.gemini_api_key:
-            raise EmbeddingError(
-                "GEMINI_API_KEY is not configured. Set it in your .env file."
+        if settings.gemini_use_vertexai:
+            if not settings.gcp_project:
+                raise EmbeddingError(
+                    "GEMINI_USE_VERTEXAI is set but GCP_PROJECT is not configured. "
+                    "Set it in your .env file."
+                )
+            self._client = genai.Client(
+                vertexai=True,
+                project=settings.gcp_project,
+                location=settings.gcp_location,
             )
-        self._client = genai.Client(api_key=settings.gemini_api_key)
+        else:
+            if not settings.gemini_api_key:
+                raise EmbeddingError(
+                    "GEMINI_API_KEY is not configured. Set it in your .env file."
+                )
+            self._client = genai.Client(api_key=settings.gemini_api_key)
         self._model = model
 
     def embed_text(self, text: str) -> list[float]:

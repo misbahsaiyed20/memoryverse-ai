@@ -7,6 +7,8 @@ import {
   renameDocument,
   deleteDocument,
   processDocument,
+  chunkDocument,
+  extractDocument,
   type DocumentItem,
 } from "@/lib/documents-api";
 import { UploadDropzone } from "@/components/documents/upload-dropzone";
@@ -14,7 +16,7 @@ import { DocumentList } from "@/components/documents/document-list";
 
 const POLL_INTERVAL_MS = 3000;
 
-export function DocumentsSection() {
+export function DocumentsSection({ onDocumentsChanged }: { onDocumentsChanged?: () => void } = {}) {
   const [documents, setDocuments] = useState<DocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -57,6 +59,7 @@ export function DocumentsSection() {
 
   function handleUploaded(doc: DocumentItem) {
     setDocuments((prev) => [doc, ...prev]);
+    onDocumentsChanged?.();
   }
 
   async function handleRename(id: string, title: string) {
@@ -67,11 +70,24 @@ export function DocumentsSection() {
   async function handleDelete(id: string) {
     await deleteDocument(id);
     setDocuments((prev) => prev.filter((d) => d.id !== id));
+    onDocumentsChanged?.();
   }
 
   async function handleProcess(id: string) {
     const { status } = await processDocument(id);
     setDocuments((prev) => prev.map((d) => (d.id === id ? { ...d, status, processing_error: null } : d)));
+    onDocumentsChanged?.();
+  }
+
+  async function handleChunk(id: string) {
+    await chunkDocument(id);
+    onDocumentsChanged?.();
+  }
+
+  async function handleExtract(id: string) {
+    const result = await extractDocument(id);
+    onDocumentsChanged?.();
+    return result;
   }
 
   return (
@@ -103,6 +119,8 @@ export function DocumentsSection() {
           onRename={handleRename}
           onDelete={handleDelete}
           onProcess={handleProcess}
+          onChunk={handleChunk}
+          onExtract={handleExtract}
         />
       )}
     </section>

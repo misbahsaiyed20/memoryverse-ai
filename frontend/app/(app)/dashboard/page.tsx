@@ -38,6 +38,11 @@ export default function DashboardPage() {
   const [topSkills, setTopSkills] = useState<{ name: string; count: number }[]>([]);
   const [topTech, setTopTech] = useState<{ name: string; count: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  // Bumped after any action in DocumentsSection (upload/process/chunk/
+  // extract/delete) — DocumentsSection has its own independent state, so
+  // without this the stat cards/widgets above it would only ever reflect
+  // whatever existed at initial page load.
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -67,7 +72,7 @@ export default function DashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [user, refreshKey]);
 
   const knowledge = stats?.knowledge ?? EMPTY_KNOWLEDGE;
   const firstName = user?.displayName?.split(" ")[0] ?? "there";
@@ -118,7 +123,7 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <DocumentsSection />
+        <DocumentsSection onDocumentsChanged={() => setRefreshKey((k) => k + 1)} />
       </div>
     </main>
   );
