@@ -20,7 +20,7 @@ from app.embeddings.embedding_provider import EmbeddingProvider
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_MODEL = "models/gemini-embedding-001"
+DEFAULT_MODEL = "gemini-embedding-2"
 MAX_ATTEMPTS = 3
 BACKOFF_SECONDS = (2, 4, 8)
 _RETRYABLE_STATUS_CODES = {429, 500, 503}
@@ -80,12 +80,11 @@ class GeminiEmbeddingProvider(EmbeddingProvider):
 
         for attempt in range(1, MAX_ATTEMPTS + 1):
             try:
-                response = self._client.models.embed_content(
-                    model=self._model,
-                    contents=texts,
-                    config=types.EmbedContentConfig(task_type=task_type),
-                )
-                return [embedding.values for embedding in response.embeddings]
+               response = self._client.models.embed_content(
+               model=self._model,
+               contents=texts,
+               )
+               return [embedding.values for embedding in response.embeddings]
 
             except genai_errors.APIError as exc:
                 last_error = exc
