@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { FileText, Sparkles } from "lucide-react";
+import { FileText, Sparkles, Award, Boxes } from "lucide-react";
 
 import { useAuth } from "@/lib/auth-context";
 import { apiFetch } from "@/lib/api";
@@ -88,10 +88,10 @@ export default function DashboardPage() {
         </p>
 
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <StatCard label="Documents" value={loading ? 0 : stats?.documents.total ?? 0} />
-          <StatCard label="Skills" value={loading ? 0 : knowledge.SKILL} />
-          <StatCard label="Projects" value={loading ? 0 : knowledge.PROJECT} />
-          <StatCard label="Certifications" value={loading ? 0 : knowledge.CERTIFICATE} />
+          <StatCard label="Documents" value={loading ? 0 : stats?.documents.total ?? 0} icon={FileText} />
+          <StatCard label="Skills" value={loading ? 0 : knowledge.SKILL} icon={Sparkles} />
+          <StatCard label="Projects" value={loading ? 0 : knowledge.PROJECT} icon={Boxes} />
+          <StatCard label="Certifications" value={loading ? 0 : knowledge.CERTIFICATE} icon={Award} />
         </div>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
@@ -99,7 +99,7 @@ export default function DashboardPage() {
           <DistributionCard title="Technology distribution" icon={Sparkles} items={topTech} loading={loading} emptyHint="Technologies you've used will show up here." />
         </div>
 
-        <div className="mt-6 rounded-2xl border border-border bg-surface p-6">
+        <div className="mt-6 rounded-2xl border border-border bg-surface p-6 transition-shadow duration-200 hover:shadow-card">
           <h2 className="font-display text-base font-semibold text-foreground">Recent documents</h2>
           {loading ? (
             <div className="mt-4 space-y-2">
@@ -145,7 +145,7 @@ function DistributionCard({
   const max = Math.max(1, ...items.map((i) => i.count));
 
   return (
-    <div className="rounded-2xl border border-border bg-surface p-6">
+    <div className="rounded-2xl border border-border bg-surface p-6 transition-shadow duration-200 hover:shadow-card">
       <h2 className="flex items-center gap-2 font-display text-base font-semibold text-foreground">
         <Icon size={16} className="text-accent" />
         {title}

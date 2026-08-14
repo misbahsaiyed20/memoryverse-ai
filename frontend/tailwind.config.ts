@@ -20,6 +20,13 @@ const config: Config = {
           foreground: "#FFFFFF",
           soft: "#EFEDFD",
         },
+        trust: {
+          DEFAULT: "#0F9D6E",
+          soft: "#E7F7F0",
+        },
+      },
+      boxShadow: {
+        card: "0 1px 2px rgba(20, 20, 26, 0.04), 0 8px 24px -12px rgba(20, 20, 26, 0.10)",
       },
       fontFamily: {
         // System font stack — no external font requests, and this *is*

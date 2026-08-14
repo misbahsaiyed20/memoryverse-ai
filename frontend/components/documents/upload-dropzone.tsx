@@ -83,12 +83,22 @@ export function UploadDropzone({ onUploaded }: UploadDropzoneProps) {
         onClick={() => inputRef.current?.click()}
         role="button"
         tabIndex={0}
-        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-colors ${
-          dragging ? "border-accent bg-accent-soft" : "border-border bg-surface hover:bg-accent-soft/40"
+        className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-10 text-center transition-all duration-200 ${
+          dragging
+            ? "scale-[1.01] border-accent bg-accent-soft"
+            : "border-border bg-surface hover:border-accent/40 hover:bg-accent-soft/40"
         }`}
       >
-        <UploadCloud className="text-accent" size={26} />
-        <p className="mt-3 text-sm font-medium text-foreground">Drag & drop a file, or click to browse</p>
+        <span
+          className={`flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+            dragging ? "bg-accent text-accent-foreground" : "bg-accent-soft text-accent"
+          }`}
+        >
+          <UploadCloud size={20} strokeWidth={2.2} />
+        </span>
+        <p className="mt-3.5 text-sm font-medium text-foreground">
+          {dragging ? "Drop to upload" : "Drag & drop a file, or click to browse"}
+        </p>
         <p className="mt-1 text-xs text-muted">PDF, DOC, DOCX, TXT, PNG, JPG — up to 25 MB</p>
         <input
           ref={inputRef}
@@ -105,7 +115,7 @@ export function UploadDropzone({ onUploaded }: UploadDropzoneProps) {
       {uploads.length > 0 && (
         <ul className="mt-4 space-y-2">
           {uploads.map((u) => (
-            <li key={u.id} className="rounded-lg border border-border bg-surface px-4 py-3 text-sm">
+            <li key={u.id} className="rounded-xl border border-border bg-surface px-4 py-3 text-sm shadow-card">
               <div className="flex items-center justify-between gap-3">
                 <span className="truncate text-foreground">{u.name}</span>
                 {u.error ? (
